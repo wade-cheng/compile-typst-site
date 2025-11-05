@@ -63,7 +63,7 @@ impl Error {
     }
 }
 
-const CONFIG_FNAME: &str = "sfn-typst-site.toml";
+const CONFIG_FNAME: &str = "compile-typst-site.toml";
 
 static PROJECT_ROOT: LazyLock<PathBuf> = LazyLock::new(|| match get_project_root() {
     Ok(path) => path,
