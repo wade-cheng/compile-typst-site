@@ -156,10 +156,9 @@ fn compile_from_scratch() -> Result<(), Error> {
     for entry in WalkDir::new(&*PROJECT_ROOT.join(CONTENT_ROOT))
         .into_iter()
         .filter_map(|e| e.ok())
+        .filter(|entry| entry.metadata().unwrap().is_file())
     {
-        if entry.metadata().unwrap().is_file() {
-            compile(entry.path())?
-        }
+        compile(entry.path())?
     }
 
     log::info!("compiled project from scratch");
