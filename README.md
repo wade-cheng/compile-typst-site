@@ -1,17 +1,26 @@
 # compile-typst-site
 
-> [!CAUTION]
-> This is an alpha release. Consider pinning to a commit for stability.
-
 `compile-typst-site` is a binary utility for static site generation using Typst. It handles passing binary data like CSS files and compilation of Typst files to HTML. It can watch for changes and only recompile Typst files that have changed, or the entire project if a template has been changed.
 
 To be specific, we do not supply a templating engine. The use case for one can be solved with native Typst. _All this CLI does is try to copy and compile files in a smart way_.
 
 ## installation
 
-This is alpha software.
+You must install [Typst](https://typst.app/open-source/#download).
 
-[Install Typst](https://typst.app/open-source/#download) and run
+See the [releases](https://github.com/wade-cheng/compile-typst-site/releases) to install from a precompiled binary.
+
+### cargo-binstall
+
+If you know what this is, yes, we support this.
+
+```
+cargo binstall --git https://github.com/wade-cheng/compile-typst-site.git
+```
+
+### compile from source
+
+You probably know what you're doing.
 
 ```
 cargo install --git https://github.com/wade-cheng/compile-typst-site.git
