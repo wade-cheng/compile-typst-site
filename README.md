@@ -19,7 +19,7 @@ cargo install --git https://github.com/wade-cheng/compile-typst-site.git
 
 ## examples
 
-With `just` and `python` installed, `cd` to `examples/typst-site-full` and use `compile-typst-site`. You will need to supply an HTML server. Try `python -m http.server`---the site will then be available at <http://localhost:8000/>.
+With `just` and `python` installed, `cd` to `examples/typst-site-full` and use `compile-typst-site`. You will need to supply an HTML server. Try `python -m http.server --directory _site`—the site will then be available at <http://localhost:8000/>.
 
 ## reference
 
