@@ -9,7 +9,7 @@ use onlyargs_derive::OnlyArgs;
 use onlyerror::Error;
 use serde::Deserialize;
 use simple_logger::SimpleLogger;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{Command, Stdio, exit};
 use std::sync::LazyLock;
 use std::{fs, io};
@@ -153,20 +153,20 @@ fn compile_from_scratch() -> Result<(), Error> {
     }
 
     log::info!("starting compilation");
-    for entry in WalkDir::new(&*PROJECT_ROOT.join(CONTENT_ROOT))
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|entry| entry.metadata().unwrap().is_file())
-    {
-        compile(entry.path())?
-    }
+    compile_batch(
+        WalkDir::new(&*PROJECT_ROOT.join(CONTENT_ROOT))
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|entry| entry.metadata().unwrap().is_file())
+            .map(|entry| entry.path().to_path_buf()),
+    )?;
 
     log::info!("compiled project from scratch");
 
     Ok(())
 }
 
-fn compile(path: &Path) -> Result<(), Error> {
+fn compile_single(path: &PathBuf) -> Result<(), Error> {
     log::trace!("here1 compiling {}", path.to_str().unwrap());
     if PASSTHROUGH_COPY_GLOBS.is_match(path) {
         log::trace!("here2");
@@ -238,6 +238,19 @@ fn compile(path: &Path) -> Result<(), Error> {
     Ok(())
 }
 
+fn compile_batch(paths: impl Iterator<Item = PathBuf>) -> Result<(), Error> {
+    std::thread::scope(|s| {
+        for path in paths {
+            s.spawn(move || {
+                compile_single(&path).unwrap_or_else(|err| err.print_msg());
+                log::debug!("compiled {}", path.to_str().unwrap());
+            });
+        }
+    });
+
+    Ok(())
+}
+
 const CONTENT_ROOT: &str = "src";
 const OUTPUT_ROOT: &str = "_site";
 const TEMPLATE_ROOT: &str = "templates";
@@ -282,10 +295,7 @@ fn run() -> Result<(), Error> {
                 Ok(events) => {
                     for event in events {
                         if let EventKind::Create(_) | EventKind::Modify(_) = event.kind {
-                            for path in &event.event.paths {
-                                compile(path)?;
-                                log::info!("compiled {}", path.to_str().unwrap());
-                            }
+                            compile_batch(event.event.paths.into_iter())?;
                         }
                     }
                 }
