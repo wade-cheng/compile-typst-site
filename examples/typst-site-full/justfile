@@ -1,0 +1,65 @@
+default:
+    just --list --unsorted
+
+watch:
+    compile_typst_site --watch
+
+build:
+    compile_typst_site
+
+export DEFAULT_JUSTFILE := '''
+#import "../../templates/blog_post.typ": conf
+
+#show: conf.with(
+    page-title: "TODO",
+    date: "1000-10-10",
+)
+'''
+blog:
+	printf '%s' "$DEFAULT_JUSTFILE" > src/blog/NEW_BLOG_POST.typ
+	code src/blog/NEW_BLOG_POST.typ
+
+list-collections:
+    #!/usr/bin/env python
+    print("listing collections")
+    import subprocess
+    import glob
+    import json
+
+    posts = {"blog": [], "garden": []}
+    for kind, blogpath in [("blog", path) for path in glob.glob("src/blog/*.typ")] + [
+        ("garden", path) for path in glob.glob("src/garden/*.typ")
+    ]:
+        # todo multithread this io-bound
+        print(blogpath)
+        print(pagetitle:=json.loads(subprocess.run(["typst", "query", blogpath, "<page-title>", "--root", ".", "--features", "html"], capture_output=True).stdout.decode("utf-8"))[0]["value"])  # fmt: skip
+        print(date:=json.loads(subprocess.run(["typst", "query", blogpath, "<date>", "--root", ".", "--features", "html"], capture_output=True).stdout.decode("utf-8"))[0]["value"])  # fmt: skip
+ 
+        blogpath = blogpath.removeprefix("src")
+        blogpath = blogpath.removesuffix("typ")
+        blogpath = blogpath + "html"
+        posts[kind].append({"path": blogpath, "pagetitle": pagetitle, "date": date})  # fmt: skip
+
+    posts["blog"].sort(key=lambda post: post["date"], reverse=True)
+    posts["garden"].sort(key=lambda post: post["date"], reverse=True)
+    print(posts)
+
+    with open("posts.json", "w") as f:
+        f.write(json.dumps(posts))
+
+post-process:
+    #!/usr/bin/env python
+    import sys
+    import re
+
+    input_data = sys.stdin.buffer.read()
+
+    # Find all head tags
+    heads = re.findall(rb'<head>.*?</head>', input_data, flags=re.DOTALL)
+
+    # Replace first head with second head, then remove the original second head
+    # We need to remove the second one first to avoid issues
+    replaced = input_data.replace(heads[1], b'', 1)  # Remove second head
+    replaced = replaced.replace(heads[0], heads[1], 1)  # Replace first with second
+
+    sys.stdout.buffer.write(replaced)

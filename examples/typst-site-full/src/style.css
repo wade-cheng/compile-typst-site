@@ -1,0 +1,294 @@
+:root {
+    --max-width: 544px;
+    --bg: white;
+    --link-after: #7b31c1;
+    --link-hover: #eeddff;
+    --text: black;
+    --code-bg: #363636;
+    --code-text: #e3e3e3;
+    --text-spacing: 0.6em;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #28133a;
+        --link-after: #8d5abe;
+        --link-hover: #563570;
+        --text: #e3d4f5;
+        --code-bg: #eadbf8;
+        --code-text: #361a4f;
+    }
+}
+
+body {
+    font-family: "EB Garamond", serif;
+    color: var(--text);
+    background-color: var(--bg);
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-size: 1.2em;
+    line-height: 1.4;
+    display: flex;
+    justify-content: center;
+    font-variant-numeric: proportional-nums oldstyle-nums;
+    font-feature-settings: "onum";
+    hyphens: auto;
+    text-align: justify;
+}
+
+h1 {
+    font-weight: normal;
+    font-size: 3em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    text-align: left;
+    scroll-margin-top: 0.5em;
+    position: relative;
+}
+
+h2 a,
+h3 a,
+h4 a,
+h5 a,
+h6 a {
+    text-decoration: none !important;
+}
+
+h2 a::after,
+h3 a::after,
+h4 a::after,
+h5 a::after,
+h6 a::after {
+    content: "" !important;
+}
+
+h2 a::before,
+h3 a::before,
+h4 a::before,
+h5 a::before,
+h6 a::before {
+    content: "#";
+    position: absolute;
+    left: -0.8em;
+    color: var(--text);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+h2 a:hover::before,
+h3 a:hover::before,
+h4 a:hover::before,
+h5 a:hover::before,
+h6 a:hover::before {
+    opacity: 0.5;
+}
+
+p {
+    margin: var(--text-spacing) 0;
+}
+
+.stdnums {
+    font-variant-numeric: initial;
+    font-feature-settings: normal;
+}
+
+.date {
+    font-size: 85%;
+    font-variant-numeric: initial;
+    font-feature-settings: normal;
+}
+
+#site-container {
+    width: var(--max-width);
+    margin: 0px;
+    padding: 2em;
+}
+
+img {
+    max-width: var(--max-width);
+    image-rendering: pixelated;
+}
+
+.figure-caption {
+    margin: auto;
+    text-align: center;
+}
+
+.figure-caption em {
+    font-variant-numeric: initial;
+    font-feature-settings: normal;
+}
+
+/* dinkify */
+hr {
+    border: none;
+    text-align: center;
+}
+hr::before {
+    content: "* * *";
+}
+@media (prefers-color-scheme: dark) {
+    hr {
+        color: #8e5eba;
+    }
+}
+
+.smallcaps {
+    font-variant: small-caps;
+    font-feature-settings: "smcp";
+}
+
+.oldstyle {
+    font-variant-numeric: proportional-nums oldstyle-nums;
+    font-feature-settings: "onum";
+}
+
+.spoiler {
+    background-color: var(--text);
+}
+
+.spoiler:hover {
+    background-color: var(--bg);
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+a:hover {
+    transition-property: background;
+    transition-duration: 0.2s;
+    background-color: var(--link-hover);
+    border-radius: 8px;
+}
+
+a::before {
+    content: "『\FEFF";
+    margin-left: -0.5em;
+    font-size: 90%;
+    color: var(--link-after);
+    font-feature-settings: "caps";
+    font-variant-numeric: normal;
+}
+
+a::after {
+    content: "\FEFF』";
+    margin-right: -0.5em;
+    font-size: 90%;
+    top: -0.1em;
+    color: var(--link-after);
+    font-feature-settings: "caps";
+    font-variant-numeric: normal;
+}
+
+ul {
+    list-style-type: "•  ";
+}
+/* ul { list-style-type: "◈  "; } */
+ul,
+ol {
+    margin: var(--text-spacing) 0;
+}
+
+img {
+    max-width: 100%;
+    image-rendering: pixelated;
+}
+
+nav {
+    overflow: visible;
+    max-width: inherit;
+}
+nav a {
+    line-height: 1.2;
+    display: inline-block;
+    padding: 8px;
+    margin-left: -8px;
+    margin-right: 8px;
+}
+nav .settings-btn {
+    float: right;
+    margin-right: 10px;
+}
+nav img {
+    image-rendering: pixelated;
+    width: 544px;
+    height: 94px;
+}
+
+pre {
+    overflow-x: auto;
+    width: 0;
+    min-width: 100%;
+}
+
+pre code {
+    background-color: var(--code-bg);
+    color: var(--code-text);
+    display: block;
+    padding: 1em;
+    text-align: left;
+    hyphens: none;
+    min-width: 100%;
+}
+
+@media print {
+    pre code {
+        white-space: pre-wrap;
+    }
+}
+
+.links .platform {
+    display: inline-block;
+    width: 5em;
+    position: relative;
+    display: inline-block;
+}
+
+.links [aria-describedby] {
+    display: inline-block;
+}
+
+[role="tooltip"] {
+    visibility: hidden;
+    position: absolute;
+    width: 10em;
+    /* top: 2rem;
+  left: 2rem; */
+    background: rgb(85, 85, 85);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    z-index: 1000;
+    /* Give some time before hiding so mouse can exit the input
+  and enter the tooltip. Not necessary since it's right below it.*/
+    /* transition: visibility 0.5s; */
+}
+
+[aria-describedby]:hover + [role="tooltip"],
+[aria-describedby]:focus + [role="tooltip"],
+[role="tooltip"]:hover,
+[role="tooltip"]:focus {
+    visibility: visible;
+}
+
+blockquote {
+    margin: 1em;
+    margin-bottom: 0em;
+    display: block;
+}
+
+.blockquote .attributed-to {
+    text-align: right;
+}
+.blockquote .attributed-to::before {
+    content: "—";
+}

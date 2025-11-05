@@ -1,0 +1,5 @@
+{
+  "tinymist.exportPdf": "never",
+  "tinymist.rootPath": "${workspaceFolder}",
+  "tinymist.typstExtraArgs": ["--features", "html"]
+}

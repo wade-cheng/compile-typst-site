@@ -1,0 +1,8 @@
+passthrough_copy = [
+    "*.css",
+    "*.png",
+    "assets/*",
+    "favicon/*"
+]
+init = ['just', 'list-collections']
+post_processing_typ = ['just', 'post-process']
