@@ -15,7 +15,7 @@ See the [releases](https://github.com/wade-cheng/compile-typst-site/releases) to
 If you know what this is, yes, we support this.
 
 ```
-cargo binstall --git https://github.com/wade-cheng/compile-typst-site.git
+cargo binstall --git https://github.com/wade-cheng/compile-typst-site.git compile-typst-site
 ```
 
 ### compile from source
