@@ -43,6 +43,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "compile-typst-site"
+version = "0.0.0-alpha"
+dependencies = [
+ "error-iter",
+ "globset",
+ "log",
+ "notify-debouncer-full",
+ "onlyargs",
+ "onlyargs_derive",
+ "onlyerror",
+ "serde",
+ "simple_logger",
+ "toml",
+ "walkdir",
+]
+
+[[package]]
 name = "deranged"
 version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -356,23 +373,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e24345aa0fe688594e73770a5f6d1b216508b4f93484c0026d521acd30134392"
 dependencies = [
  "serde_core",
-]
-
-[[package]]
-name = "sfn-typst-site"
-version = "0.0.0-alpha"
-dependencies = [
- "error-iter",
- "globset",
- "log",
- "notify-debouncer-full",
- "onlyargs",
- "onlyargs_derive",
- "onlyerror",
- "serde",
- "simple_logger",
- "toml",
- "walkdir",
 ]
 
 [[package]]
