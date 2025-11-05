@@ -241,7 +241,7 @@ fn run() -> Result<(), Error> {
         .without_timestamps()
         .with_level(LevelFilter::Off)
         .with_module_level(
-            "sfn_typst_site",
+            "compile_typst_site",
             if args.trace {
                 LevelFilter::Trace
             } else if args.verbose {
