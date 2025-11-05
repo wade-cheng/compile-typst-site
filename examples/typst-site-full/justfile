@@ -25,27 +25,39 @@ list-collections:
     import subprocess
     import glob
     import json
+    from concurrent.futures import ThreadPoolExecutor
+
+    def process_post(kind, path):
+        print(path)
+        query = lambda label: json.loads(subprocess.run(
+            ["typst", "query", path, f"<{label}>", "--root", ".", "--features", "html"],
+            capture_output=True
+        ).stdout.decode("utf-8"))[0]["value"]
+        
+        # we can double our concurrency by computing these in
+        # separate threads, but this is fine for now. 
+        # O(2n) vs O(n) span ykyk.
+        pagetitle = query("page-title")
+        date = query("date")
+        print(pagetitle, date)
+        
+        path = path.removeprefix("src").removesuffix("typ") + "html"
+        return kind, {"path": path, "pagetitle": pagetitle, "date": date}
 
     posts = {"blog": [], "garden": []}
-    for kind, blogpath in [("blog", path) for path in glob.glob("src/blog/*.typ")] + [
-        ("garden", path) for path in glob.glob("src/garden/*.typ")
-    ]:
-        # todo multithread this io-bound
-        print(blogpath)
-        print(pagetitle:=json.loads(subprocess.run(["typst", "query", blogpath, "<page-title>", "--root", ".", "--features", "html"], capture_output=True).stdout.decode("utf-8"))[0]["value"])  # fmt: skip
-        print(date:=json.loads(subprocess.run(["typst", "query", blogpath, "<date>", "--root", ".", "--features", "html"], capture_output=True).stdout.decode("utf-8"))[0]["value"])  # fmt: skip
- 
-        blogpath = blogpath.removeprefix("src")
-        blogpath = blogpath.removesuffix("typ")
-        blogpath = blogpath + "html"
-        posts[kind].append({"path": blogpath, "pagetitle": pagetitle, "date": date})  # fmt: skip
+    items = [("blog", p) for p in glob.glob("src/blog/*.typ")] + \
+            [("garden", p) for p in glob.glob("src/garden/*.typ")]
 
-    posts["blog"].sort(key=lambda post: post["date"], reverse=True)
-    posts["garden"].sort(key=lambda post: post["date"], reverse=True)
+    with ThreadPoolExecutor() as executor:
+        for kind, post in executor.map(lambda x: process_post(*x), items):
+            posts[kind].append(post)
+
+    posts["blog"].sort(key=lambda p: p["date"], reverse=True)
+    posts["garden"].sort(key=lambda p: p["date"], reverse=True)
     print(posts)
 
     with open("posts.json", "w") as f:
-        f.write(json.dumps(posts))
+        json.dump(posts, f)
 
 post-process:
     #!/usr/bin/env python
