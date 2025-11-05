@@ -44,7 +44,7 @@ dependencies = [
 
 [[package]]
 name = "compile-typst-site"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "error-iter",
  "globset",
