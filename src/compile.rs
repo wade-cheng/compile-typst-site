@@ -1,3 +1,5 @@
+//! Compile Typst to HTML given paths and a [`crate::config::Config`].
+
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};

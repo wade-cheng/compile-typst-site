@@ -1,3 +1,5 @@
+//! The function to call to kick off the binary.
+
 use notify_debouncer_full;
 use notify_debouncer_full::DebounceEventResult;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};

@@ -1,3 +1,5 @@
+//! `compile-typst-site` project configuration, pulling from command-line arguments and a config file.
+
 use crate::error::Error;
 
 use derivative::Derivative;
@@ -42,7 +44,7 @@ struct ConfigFile {
     post_processing_typ: Option<Vec<String>>,
 }
 
-/// Full config after taking in [`Args`], [`ConfigFile`], and other post-computations.
+/// Full config after taking in command line arguments, a configuration file, and other post-computations.
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Config {
