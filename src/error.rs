@@ -1,3 +1,5 @@
+//! The global error type.
+
 use error_iter::ErrorIter as _;
 use notify_debouncer_full;
 use onlyargs::CliError;
