@@ -1,15 +1,14 @@
 //! `compile-typst-site` project configuration, pulling from command-line arguments and a config file.
 
-use crate::error::Error;
-
+use anyhow::{Result, anyhow};
 use derivative::Derivative;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use onlyargs_derive::OnlyArgs;
 use serde::Deserialize;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::exit;
 use std::sync::LazyLock;
-use std::{fs, io};
 
 pub static CONFIG: LazyLock<Config> = LazyLock::new(Config::new);
 
@@ -83,16 +82,13 @@ const CONFIG_FNAME: &str = "compile-typst-site.toml";
 
 impl Config {
     pub fn new() -> Self {
-        match Self::new_inner() {
-            Ok(config) => config,
-            Err(err) => {
-                err.print_msg();
-                exit(1)
-            }
-        }
+        Self::new_inner().unwrap_or_else(|err| {
+            eprintln!("{}", err);
+            exit(1)
+        })
     }
 
-    fn new_inner() -> Result<Self, Error> {
+    fn new_inner() -> Result<Self> {
         let content_root = PathBuf::from("src");
         let output_root = PathBuf::from("_site");
         let template_root = PathBuf::from("templates");
@@ -134,7 +130,7 @@ impl Config {
         })
     }
 
-    fn get_project_root() -> Result<PathBuf, Error> {
+    fn get_project_root() -> Result<PathBuf> {
         let mut root = std::env::current_dir()?;
 
         loop {
@@ -145,12 +141,9 @@ impl Config {
             }
 
             if !root.pop() {
-                return Err(Error::Io(io::Error::new(
-                    io::ErrorKind::NotFound,
-                    format!(
-                        "Couldn't find a configuration file (looking for {CONFIG_FNAME}) in the current directory or any parent directories."
-                    ),
-                )));
+                return Err(anyhow!(
+                    "Couldn't find a configuration file (looking for {CONFIG_FNAME}) in the current directory or any parent directories."
+                ));
             }
         }
     }
@@ -159,7 +152,7 @@ impl Config {
         globs: &[String],
         project_root: &Path,
         content_root: &Path,
-    ) -> Result<GlobSet, Error> {
+    ) -> Result<GlobSet> {
         let mut builder = GlobSetBuilder::new();
 
         for glob in globs {
@@ -175,7 +168,7 @@ impl Config {
         Ok(builder.build()?)
     }
 
-    fn get_configfile(project_root: &Path) -> Result<ConfigFile, Error> {
+    fn get_configfile(project_root: &Path) -> Result<ConfigFile> {
         let file = project_root.join(CONFIG_FNAME);
         let contents = fs::read_to_string(file)?;
         let config = toml::from_str(&contents)?;
