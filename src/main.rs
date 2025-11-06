@@ -110,7 +110,7 @@ impl Config {
             passthrough_copy,
             init,
             post_processing_typ,
-        } = Self::get_configfile()?;
+        } = Self::get_configfile(&project_root)?;
         let passthrough_copy = passthrough_copy.unwrap_or(vec![]);
         let init = init.unwrap_or(vec![]);
         let post_processing_typ = post_processing_typ.unwrap_or(vec![]);
@@ -175,8 +175,8 @@ impl Config {
         Ok(builder.build()?)
     }
 
-    fn get_configfile() -> Result<ConfigFile, Error> {
-        let file = CONFIG.project_root.join(CONFIG_FNAME);
+    fn get_configfile(project_root: &Path) -> Result<ConfigFile, Error> {
+        let file = project_root.join(CONFIG_FNAME);
         let contents = fs::read_to_string(file)?;
         let config = toml::from_str(&contents)?;
         Ok(config)
