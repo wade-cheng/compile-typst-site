@@ -1,14 +1,14 @@
 //! Compile Typst to HTML given paths and a [`crate::config::Config`].
 
+use anyhow::Result;
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use walkdir::WalkDir;
 
 use crate::config::CONFIG;
-use crate::error::Error;
 
-pub fn compile_from_scratch() -> Result<(), Error> {
+pub fn compile_from_scratch() -> Result<()> {
     log::info!("running init command");
     if CONFIG.init.len() > 0 {
         Command::new(&CONFIG.init[0])
@@ -34,7 +34,7 @@ pub fn compile_from_scratch() -> Result<(), Error> {
     Ok(())
 }
 
-pub fn compile_single(path: &PathBuf) -> Result<(), Error> {
+pub fn compile_single(path: &PathBuf) -> Result<()> {
     log::trace!("here1 compiling {}", path.to_str().unwrap());
     if CONFIG.passthrough_copy_globs.is_match(path) {
         log::trace!("here2");
@@ -111,11 +111,11 @@ pub fn compile_single(path: &PathBuf) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn compile_batch(paths: impl Iterator<Item = PathBuf>) -> Result<(), Error> {
+pub fn compile_batch(paths: impl Iterator<Item = PathBuf>) -> Result<()> {
     std::thread::scope(|s| {
         for path in paths {
             s.spawn(move || {
-                compile_single(&path).unwrap_or_else(|err| err.print_msg());
+                compile_single(&path).unwrap_or_else(|err| eprintln!("{}", err));
                 log::debug!("compiled {}", path.to_str().unwrap());
             });
         }

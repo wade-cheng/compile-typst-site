@@ -1,5 +1,6 @@
 //! The function to call to kick off the binary.
 
+use anyhow::Result;
 use notify_debouncer_full;
 use notify_debouncer_full::DebounceEventResult;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};
@@ -7,10 +8,9 @@ use std::{sync::mpsc, time::Duration};
 
 use crate::compile;
 use crate::config::CONFIG;
-use crate::error::Error;
 use crate::logging;
 
-pub fn run() -> Result<(), Error> {
+pub fn run() -> Result<()> {
     logging::init();
 
     log::trace!("loaded configuration: {:#?}", &*CONFIG);

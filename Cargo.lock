@@ -12,6 +12,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.100"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
+
+[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -46,14 +52,13 @@ dependencies = [
 name = "compile-typst-site"
 version = "0.1.4"
 dependencies = [
+ "anyhow",
  "derivative",
- "error-iter",
  "globset",
  "log",
  "notify-debouncer-full",
  "onlyargs",
  "onlyargs_derive",
- "onlyerror",
  "serde",
  "simple_logger",
  "toml",
@@ -85,12 +90,6 @@ name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
-
-[[package]]
-name = "error-iter"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8070547d90d1b98debb6626421d742c897942bbb78f047694a5eb769495eccd6"
 
 [[package]]
 name = "file-id"
@@ -287,15 +286,6 @@ checksum = "9e96dec8cebe43d77e74cc3104184765ba563fc675890fef82b61124fd647cd6"
 dependencies = [
  "myn",
  "onlyargs",
-]
-
-[[package]]
-name = "onlyerror"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f0c9c18fd5c5a2c580df757c1a0bc5058fa4b1db1e1823c6692d7c7d5a09ff0"
-dependencies = [
- "myn",
 ]
 
 [[package]]
