@@ -2,10 +2,10 @@ default:
     just --list --unsorted
 
 watch:
-    compile_typst_site --watch
+    compile-typst-site --watch
 
 build:
-    compile_typst_site
+    compile-typst-site
 
 export DEFAULT_JUSTFILE := '''
 #import "../../templates/blog_post.typ": conf
