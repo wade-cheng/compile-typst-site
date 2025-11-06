@@ -30,7 +30,7 @@ struct Args {
 }
 
 #[derive(Deserialize)]
-struct Config {
+struct ConfigFile {
     /// Array of globs to match for passthrough-copying.
     ///
     /// E.g., `passthrough_copy = ["*.css", "*.js", "assets/*"]
@@ -83,7 +83,7 @@ static PROJECT_ROOT: LazyLock<PathBuf> = LazyLock::new(|| match get_project_root
         exit(1)
     }
 });
-static CONFIG: LazyLock<Config> = LazyLock::new(|| match get_config() {
+static CONFIG_FILE: LazyLock<ConfigFile> = LazyLock::new(|| match get_configfile() {
     Ok(config) => config,
     Err(err) => {
         err.print_msg();
@@ -101,7 +101,7 @@ static PASSTHROUGH_COPY_GLOBS: LazyLock<GlobSet> = LazyLock::new(|| match compil
 fn compile_globs() -> Result<GlobSet, Error> {
     let mut builder = GlobSetBuilder::new();
 
-    for glob in CONFIG.passthrough_copy.as_ref().unwrap_or(&vec![]) {
+    for glob in CONFIG_FILE.passthrough_copy.as_ref().unwrap_or(&vec![]) {
         let glob = PROJECT_ROOT
             .join(CONTENT_ROOT)
             .join(glob)
@@ -135,7 +135,7 @@ fn get_project_root() -> Result<PathBuf, Error> {
     }
 }
 
-fn get_config() -> Result<Config, Error> {
+fn get_configfile() -> Result<ConfigFile, Error> {
     let file = PROJECT_ROOT.join(CONFIG_FNAME);
     let contents = fs::read_to_string(file)?;
     let config = toml::from_str(&contents)?;
@@ -144,9 +144,9 @@ fn get_config() -> Result<Config, Error> {
 
 fn compile_from_scratch() -> Result<(), Error> {
     log::info!("running init command");
-    if CONFIG.init.as_ref().unwrap_or(&vec![]).len() > 0 {
-        Command::new(&CONFIG.init.as_ref().unwrap()[0])
-            .args(&CONFIG.init.as_ref().unwrap()[1..])
+    if CONFIG_FILE.init.as_ref().unwrap_or(&vec![]).len() > 0 {
+        Command::new(&CONFIG_FILE.init.as_ref().unwrap()[0])
+            .args(&CONFIG_FILE.init.as_ref().unwrap()[1..])
             .spawn()
             .unwrap()
             .wait()
@@ -216,9 +216,15 @@ fn compile_single(path: &PathBuf) -> Result<(), Error> {
                 .spawn()
                 .unwrap();
 
-            if CONFIG.post_processing_typ.as_ref().unwrap_or(&vec![]).len() > 0 {
-                child = Command::new(&CONFIG.post_processing_typ.as_ref().unwrap()[0])
-                    .args(&CONFIG.post_processing_typ.as_ref().unwrap()[1..])
+            if CONFIG_FILE
+                .post_processing_typ
+                .as_ref()
+                .unwrap_or(&vec![])
+                .len()
+                > 0
+            {
+                child = Command::new(&CONFIG_FILE.post_processing_typ.as_ref().unwrap()[0])
+                    .args(&CONFIG_FILE.post_processing_typ.as_ref().unwrap()[1..])
                     .stdin(child.stdout.unwrap())
                     .stdout(Stdio::piped())
                     .spawn()
