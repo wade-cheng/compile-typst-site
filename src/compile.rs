@@ -6,13 +6,13 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use walkdir::WalkDir;
 
-use crate::config::CONFIG;
+use crate::config::Config;
 
-pub fn compile_from_scratch() -> Result<()> {
+pub fn compile_from_scratch(config: &Config) -> Result<()> {
     log::info!("running init command");
-    if CONFIG.init.len() > 0 {
-        Command::new(&CONFIG.init[0])
-            .args(&CONFIG.init[1..])
+    if config.init.len() > 0 {
+        Command::new(&config.init[0])
+            .args(&config.init[1..])
             .spawn()
             .unwrap()
             .wait()
@@ -22,11 +22,12 @@ pub fn compile_from_scratch() -> Result<()> {
 
     log::info!("starting compilation");
     compile_batch(
-        WalkDir::new(CONFIG.project_root.join(&CONFIG.content_root))
+        WalkDir::new(config.project_root.join(&config.content_root))
             .into_iter()
             .filter_map(|e| e.ok())
             .filter(|entry| entry.metadata().unwrap().is_file())
             .map(|entry| entry.path().to_path_buf()),
+        &config,
     )?;
 
     log::info!("compiled project from scratch");
@@ -34,18 +35,18 @@ pub fn compile_from_scratch() -> Result<()> {
     Ok(())
 }
 
-pub fn compile_single(path: &PathBuf) -> Result<()> {
+pub fn compile_single(path: &PathBuf, config: &Config) -> Result<()> {
     log::trace!("here1 compiling {}", path.to_str().unwrap());
-    if CONFIG.passthrough_copy_globs.is_match(path) {
+    if config.passthrough_copy_globs.is_match(path) {
         log::trace!("here2");
         let path_in_src = path
-            .strip_prefix(CONFIG.project_root.join(&CONFIG.content_root))
+            .strip_prefix(config.project_root.join(&config.content_root))
             .unwrap();
         let rel_path = path_in_src.parent().unwrap();
-        let parent_dir_in_dst = CONFIG.project_root.join(&CONFIG.output_root).join(rel_path);
+        let parent_dir_in_dst = config.project_root.join(&config.output_root).join(rel_path);
         let file_in_dst = parent_dir_in_dst.join(path.file_name().unwrap());
 
-        fs::create_dir_all(CONFIG.project_root.join(&CONFIG.output_root).join(rel_path))?;
+        fs::create_dir_all(config.project_root.join(&config.output_root).join(rel_path))?;
         fs::copy(path, &file_in_dst)?;
 
         log::trace!(
@@ -56,22 +57,22 @@ pub fn compile_single(path: &PathBuf) -> Result<()> {
     } else if path.extension().is_some() && path.extension().unwrap() == "typ" {
         log::trace!("here3");
 
-        if let Ok(_) = path.strip_prefix(CONFIG.project_root.join(&CONFIG.template_root)) {
-            compile_from_scratch()?;
+        if let Ok(_) = path.strip_prefix(config.project_root.join(&config.template_root)) {
+            compile_from_scratch(&config)?;
             // need to be careful of infinite recursion, compile_everything calls us (compile)
             // should be fine because this code path should only trigger when compiling
             // on the template root.
             //
             // ... what if someone puts their template code in their src folder?
         } else if let Ok(path_in_src) =
-            path.strip_prefix(CONFIG.project_root.join(&CONFIG.content_root))
+            path.strip_prefix(config.project_root.join(&config.content_root))
         {
             let rel_path = path_in_src.parent().unwrap();
-            let parent_dir_in_dst = CONFIG.project_root.join(&CONFIG.output_root).join(rel_path);
+            let parent_dir_in_dst = config.project_root.join(&config.output_root).join(rel_path);
             let mut file_in_dst = parent_dir_in_dst.join(path.file_name().unwrap());
             file_in_dst.set_extension("html");
 
-            fs::create_dir_all(CONFIG.project_root.join(&CONFIG.output_root).join(rel_path))
+            fs::create_dir_all(config.project_root.join(&config.output_root).join(rel_path))
                 .unwrap();
             let mut child = Command::new("typst")
                 .arg("c")
@@ -82,14 +83,14 @@ pub fn compile_single(path: &PathBuf) -> Result<()> {
                 .arg("--format")
                 .arg("html")
                 .arg("--root")
-                .arg(&*CONFIG.project_root)
+                .arg(&config.project_root)
                 .stdout(Stdio::piped())
                 .spawn()
                 .unwrap();
 
-            if CONFIG.post_processing_typ.len() > 0 {
-                child = Command::new(&CONFIG.post_processing_typ[0])
-                    .args(&CONFIG.post_processing_typ[1..])
+            if config.post_processing_typ.len() > 0 {
+                child = Command::new(&config.post_processing_typ[0])
+                    .args(&config.post_processing_typ[1..])
                     .stdin(child.stdout.unwrap())
                     .stdout(Stdio::piped())
                     .spawn()
@@ -111,11 +112,11 @@ pub fn compile_single(path: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-pub fn compile_batch(paths: impl Iterator<Item = PathBuf>) -> Result<()> {
+pub fn compile_batch(paths: impl Iterator<Item = PathBuf>, config: &Config) -> Result<()> {
     std::thread::scope(|s| {
         for path in paths {
             s.spawn(move || {
-                compile_single(&path).unwrap_or_else(|err| eprintln!("{}", err));
+                compile_single(&path, &config).unwrap_or_else(|err| eprintln!("{}", err));
                 log::debug!("compiled {}", path.to_str().unwrap());
             });
         }

@@ -8,9 +8,6 @@ use serde::Deserialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::exit;
-use std::sync::LazyLock;
-
-pub static CONFIG: LazyLock<Config> = LazyLock::new(Config::new);
 
 /// Build a site with typst.
 #[derive(Clone, Debug, Eq, PartialEq, OnlyArgs)]

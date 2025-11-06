@@ -7,32 +7,32 @@ use notify_debouncer_full::notify::{EventKind, RecursiveMode};
 use std::{sync::mpsc, time::Duration};
 
 use crate::compile;
-use crate::config::CONFIG;
+use crate::config::Config;
 use crate::logging;
 
-pub fn run() -> Result<()> {
-    logging::init();
+pub fn run(config: &Config) -> Result<()> {
+    logging::init(&config);
 
-    log::trace!("loaded configuration: {:#?}", &*CONFIG);
+    log::trace!("loaded configuration: {:#?}", &config);
 
-    if CONFIG.ignore_initial {
+    if config.ignore_initial {
         log::info!("ignoring initial compile from scratch");
     } else {
-        compile::compile_from_scratch()?;
+        compile::compile_from_scratch(&config)?;
     }
 
-    if CONFIG.watch {
+    if config.watch {
         let (tx, rx) = mpsc::channel::<DebounceEventResult>();
 
         let mut debouncer =
             notify_debouncer_full::new_debouncer(Duration::from_millis(200), None, tx)?;
 
         debouncer.watch(
-            &*CONFIG.project_root.join(&CONFIG.content_root),
+            &config.project_root.join(&config.content_root),
             RecursiveMode::Recursive,
         )?;
         debouncer.watch(
-            &*CONFIG.project_root.join(&CONFIG.template_root),
+            &config.project_root.join(&config.template_root),
             RecursiveMode::Recursive,
         )?;
         for res in rx {
@@ -40,7 +40,7 @@ pub fn run() -> Result<()> {
                 Ok(events) => {
                     for event in events {
                         if let EventKind::Create(_) | EventKind::Modify(_) = event.kind {
-                            compile::compile_batch(event.event.paths.into_iter())?;
+                            compile::compile_batch(event.event.paths.into_iter(), &config)?;
                             // TODO: figure out howo to debug-level log watched compilations
                         }
                     }
