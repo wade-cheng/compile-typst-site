@@ -81,7 +81,7 @@ cargo install --git https://github.com/wade-cheng/compile-typst-site.git
 
 ## examples
 
-The full example requires `just` and `python` to run pre and post processing. With them installed, `cd` to `examples/typst-site-full` and use `compile-typst-site`. You will need to supply an HTML server. Try `python -m http.server --directory _site`. The site will then be available at <http://localhost:8000/>.
+The full example additionally requires `just` and `python` to run pre and post processing. With them installed, `cd` to `examples/typst-site-full` and use `compile-typst-site`. You will need to supply an HTML server. Try `python -m http.server --directory _site`. The site will then be available at <http://localhost:8000/>.
 
 ## reference
 
@@ -94,7 +94,7 @@ The full example requires `just` and `python` to run pre and post processing. Wi
 └── compile-typst-site.toml
 ```
 
-That is, just like `cargo`, `just`, `uv`, and so on, you can use the binary while in a subdirectory for the project root.
+That is, just like `cargo`, `just`, `uv`, and so on, you can use the binary while in a subdirectory of the project root.
 
 When you do so, it looks at every file in `src`.
 
