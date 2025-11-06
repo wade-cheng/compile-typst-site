@@ -1,3 +1,4 @@
+use derivative::Derivative;
 use error_iter::ErrorIter as _;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use log::LevelFilter;
@@ -48,6 +49,8 @@ struct ConfigFile {
 }
 
 /// Full config after taking in [`Args`], [`ConfigFile`], and other post-computations.
+#[derive(Derivative)]
+#[derivative(Debug)]
 struct Config {
     /// Build and then watch for changes.
     watch: bool,
@@ -63,6 +66,7 @@ struct Config {
     ///
     /// E.g., `passthrough_copy = ["*.css", "*.js", "assets/*"]
     passthrough_copy: Vec<String>,
+    #[derivative(Debug = "ignore")]
     passthrough_copy_globs: GlobSet,
     /// Command to run before a full rebuild.
     ///
@@ -345,7 +349,7 @@ fn run() -> Result<(), Error> {
         .init()
         .unwrap();
 
-    log::debug!("project root is {:?}", &*CONFIG.project_root);
+    log::trace!("loaded configuration: {:#?}", &*CONFIG);
 
     if CONFIG.ignore_initial {
         log::info!("ignoring initial compile from scratch");
