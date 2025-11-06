@@ -1,8 +1,61 @@
 # compile-typst-site
 
-`compile-typst-site` is a binary utility for static site generation using Typst. It handles passing binary data like CSS files and compilation of Typst files to HTML. It can watch for changes and only recompile Typst files that have changed, or the entire project if a template has been changed.
+`compile-typst-site` is a binary utility for static site generation using Typst. It's built to be, at least conceptually, dead simple. Let's explain and motivate its use case with an example. Say we've created a directory tree that maps to a website.
 
-To be specific, we do not supply a templating engine. The use case for one can be solved with native Typst. _All this CLI does is try to copy and compile files in a smart way_.
+```
+$ tree
+.
+├── src/
+│   ├── about.typ
+│   ├── blog/
+│   │   ├── post-1.typ
+│   │   ├── post-2.typ
+│   │   ├── post-3.typ
+│   │   └── ...
+│   ├── data.json
+│   ├── index.typ
+│   └── style.css
+└── templates/
+    └── base.typ
+```
+
+Running a full-site generation by hand would mean running `typst compile` on `index.typ`, and `about.typ`, and the first blog post, and then the second, and so on and so on. Also, maybe the index file uses `data.json` to draw something cool on the home page, and we don't need it after that. If I want to generate the site into another folder, clear of unnecessary data, I would need to remember to copy over `style.css` but not `data.json`.
+
+All this program does is automate this process. It'll compile all `.typ` files it finds, and you can supply a configuration file to tell it what to copy over. After adding a configuration file at `compile-typst-site.toml`:
+
+```
+$ compile-typst-site
+INFO  [compile_typst_site] compiled project from scratch
+
+$ tree
+.
+├── compile-typst-site.toml
+├── _site/
+│   ├── about.html
+│   ├── blog/
+│   │   ├── post-1.html
+│   │   ├── post-2.html
+│   │   ├── post-3.html
+│   │   └── ...
+│   ├── index.html
+│   └── style.css
+├── src/
+│   ├── about.typ
+│   ├── blog/
+│   │   ├── post-1.typ
+│   │   ├── post-2.typ
+│   │   ├── post-3.typ
+│   │   └── ...
+│   ├── data.json
+│   ├── index.typ
+│   └── style.css
+└── templates/
+    └── base.typ
+```
+
+`compile-typst-site` can also watch your directory and only recompile individual Typst source files that have changed. It'll also recompile the entire project if a template everything depends on has been changed.
+
+To be clear, we do not supply a templating engine. The use case for one can be solved with native Typst. All this CLI does is free you from calling `typst compile` one bajillion times. We also do not supply an HTTP server for you to view your generated files. You will need one to view your site locally, but if you are uploading your files straight to GitHub Pages, Neocities, etc, you will not.
 
 ## installation
 
@@ -28,7 +81,7 @@ cargo install --git https://github.com/wade-cheng/compile-typst-site.git
 
 ## examples
 
-With `just` and `python` installed, `cd` to `examples/typst-site-full` and use `compile-typst-site`. You will need to supply an HTML server. Try `python -m http.server --directory _site`—the site will then be available at <http://localhost:8000/>.
+The full example additionally requires `just` and `python` to run pre and post processing. With them installed, `cd` to `examples/typst-site-full` and use `compile-typst-site`. You will need to supply an HTML server. Try `python -m http.server --directory _site`. The site will then be available at <http://localhost:8000/>.
 
 ## reference
 
@@ -41,33 +94,35 @@ With `just` and `python` installed, `cd` to `examples/typst-site-full` and use `
 └── compile-typst-site.toml
 ```
 
-That is, just like `cargo`, `just`, `uv`, and so on, you can use the binary while in a subdirectory for the project root.
+That is, just like `cargo`, `just`, `uv`, and so on, you can use the binary while in a subdirectory of the project root.
 
-When you do so, it "compiles" every file in `src`.
+When you do so, it looks at every file in `src`.
 
-- Typst files are "compiled" by calling your local Typst CLI, so you should have one installed.
-- It also "compiles" files matching those in the `passthrough_copy` array in `compile-typst-site.toml`. These files are simply copied over. Matching can use globs, processed with the `globset` crate. This is probably unidiomatic to file paths (`*` matches recursively instead of just the first layer).
+- Typst files are compiled by calling your local Typst CLI, so you should have one installed.
+- Files matching those in the `passthrough_copy` array in `compile-typst-site.toml` are copied over. Matching can use globs, processed with the `globset` crate. This is probably unidiomatic to file paths (`*` matches recursively instead of just the first layer).
 - Other files are ignored.
 
 If file watching is turned on, changes or additions to `src` will only recompile that file. Changes or additions to `templates` will recompile the entire project.
 
 See `compile-typst-site --help` and the example for more details.
 
-The config file matches
+The config file at `compile-typst-site.toml`
 
-```
+```rust
 struct Config {
     /// Array of globs to match for passthrough-copying.
+    ///
+    /// E.g., `passthrough_copy = ["*.css", "*.js", "assets/*"]
     passthrough_copy: Option<Vec<String>>,
     /// Command to run before a full rebuild.
     ///
-    /// E.g., `["echo", "rebuilding"]`.
+    /// E.g., `passthrough_copy = ["echo", "rebuilding"]`.
     init: Option<Vec<String>>,
     /// Command to run to post-process HTML files generated by Typst.
     ///
     /// Must take in stdin and return via stdout.
     ///
-    /// E.g., `["python", "post_processing_script.py"]`.
+    /// E.g., `post_processing_typ = ["python", "post_processing_script.py"]`.
     post_processing_typ: Option<Vec<String>>,
 }
 ```
