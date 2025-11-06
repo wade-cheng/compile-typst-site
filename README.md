@@ -21,7 +21,7 @@ $ tree
 
 Running a full-site generation by hand would mean running `typst compile` on `index.typ`, and `about.typ`, and the first blog post, and then the second, and so on and so on. Also, maybe the index file uses `data.json` to draw something cool on the home page, and we don't need it after that. If I want to generate the site into another folder, clear of unnecessary data, I would need to remember to copy over `style.css` but not `data.json`.
 
-All this program does is automate this process. It'll compile all `.typ` files it finds, and you can supply a configuration file to tell it what to copy over. After adding a configuration file:
+All this program does is automate this process. It'll compile all `.typ` files it finds, and you can supply a configuration file to tell it what to copy over. After adding a configuration file at `compile-typst-site.toml`:
 
 ```
 $ compile-typst-site
