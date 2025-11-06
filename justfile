@@ -7,3 +7,6 @@ release tag:
     git push --tags
 
 # `dist init` can be helpful.
+
+install-locally:
+    cargo install --path .
