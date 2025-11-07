@@ -50,7 +50,7 @@ dependencies = [
 
 [[package]]
 name = "compile-typst-site"
-version = "0.1.5"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "derivative",
