@@ -41,7 +41,7 @@ list-collections:
         date = query("date")
         print(pagetitle, date)
         
-        path = path.removeprefix("src").removesuffix("typ") + "html"
+        path = path.removeprefix("src").removesuffix(".typ") + "/"
         return kind, {"path": path, "pagetitle": pagetitle, "date": date}
 
     posts = {"blog": [], "garden": []}

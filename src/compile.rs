@@ -1,6 +1,6 @@
 //! Compile Typst to HTML given paths and a [`crate::config::Config`].
 
-use anyhow::Result;
+use anyhow::{Context, Result, anyhow};
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -69,8 +69,15 @@ pub fn compile_single(path: &PathBuf, config: &Config) -> Result<()> {
         {
             let rel_path = path_in_src.parent().unwrap();
             let parent_dir_in_dst = config.project_root.join(&config.output_root).join(rel_path);
-            let mut file_in_dst = parent_dir_in_dst.join(path.file_name().unwrap());
-            file_in_dst.set_extension("html");
+            let file_in_dst = if path.file_name().unwrap() == "index.typ" || config.literal_paths {
+                let mut file_in_dst = parent_dir_in_dst.join(path.file_name().unwrap());
+                file_in_dst.set_extension("html");
+                file_in_dst
+            } else {
+                parent_dir_in_dst
+                    .join(path.file_stem().unwrap())
+                    .join("index.html")
+            };
 
             fs::create_dir_all(config.project_root.join(&config.output_root).join(rel_path))
                 .unwrap();
@@ -97,9 +104,14 @@ pub fn compile_single(path: &PathBuf, config: &Config) -> Result<()> {
                     .unwrap();
             }
 
-            let output = child.wait_with_output().unwrap();
+            let output = child.wait_with_output()?;
 
-            fs::write(&file_in_dst, output.stdout).unwrap();
+            fs::create_dir_all(&file_in_dst.parent().ok_or(anyhow!(
+                "Failed trying to create parent directory of {:?}",
+                &file_in_dst
+            ))?)?;
+            fs::write(&file_in_dst, output.stdout)
+                .context(format!("Failed to write output to {:?}", &file_in_dst))?;
 
             log::trace!(
                 "typfile compiled {} to {}",

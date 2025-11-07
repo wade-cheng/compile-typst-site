@@ -56,8 +56,8 @@
   html.div(id: "site-container")[
     #html.nav[
       #html.a(href: "/")[home]
-      #html.a(href: "/blog.html")[blog]
-      #html.a(href: "/garden.html")[garden]
+      #html.a(href: "/blog/")[blog]
+      #html.a(href: "/garden/")[garden]
     ]
 
     #html.header[
