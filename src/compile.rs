@@ -116,7 +116,7 @@ pub fn compile_batch(paths: impl Iterator<Item = PathBuf>, config: &Config) -> R
     std::thread::scope(|s| {
         for path in paths {
             s.spawn(move || {
-                compile_single(&path, &config).unwrap_or_else(|err| eprintln!("{}", err));
+                compile_single(&path, &config).unwrap_or_else(|err| eprintln!("{:?}", err)); // TODO: this should fail, but exit(1) borks.
                 log::debug!("compiled {}", path.to_str().unwrap());
             });
         }

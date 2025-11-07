@@ -72,7 +72,7 @@ const CONFIG_FNAME: &str = "compile-typst-site.toml";
 impl Config {
     pub fn new() -> Self {
         Self::new_inner().unwrap_or_else(|err| {
-            eprintln!("{}", err);
+            eprintln!("{:?}", err);
             exit(1)
         })
     }
