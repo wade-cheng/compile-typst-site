@@ -109,10 +109,10 @@ See `compile-typst-site --help` and the example for more details.
 The config file at `compile-typst-site.toml`
 
 ```rust
-struct Config {
+struct ConfigFile {
     /// Array of globs to match for passthrough-copying.
     ///
-    /// E.g., `passthrough_copy = ["*.css", "*.js", "assets/*"]
+    /// Example in the TOML config file: `passthrough_copy = ["*.css", "*.js", "assets/*"]
     passthrough_copy: Option<Vec<String>>,
     /// Command to run before a full rebuild.
     ///
@@ -122,7 +122,13 @@ struct Config {
     ///
     /// Must take in stdin and return via stdout.
     ///
-    /// E.g., `post_processing_typ = ["python", "post_processing_script.py"]`.
+    /// Example in the TOML config file: `post_processing_typ = ["python", "post_processing_script.py"]`.
     post_processing_typ: Option<Vec<String>>,
+    /// Convert paths literally instead of magically tranforming to index.html.
+    ///
+    /// i.e., ./content.typ goes to ./content.html instead of defaulting to ./content/index.html.
+    ///
+    /// Example in the TOML config file: `literal_paths = true`
+    literal_paths: Option<bool>,
 }
 ```
