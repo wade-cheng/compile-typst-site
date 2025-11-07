@@ -1,6 +1,7 @@
 //! Compile Typst to HTML given paths and a [`crate::config::Config`].
 
 use anyhow::{Context, Result, anyhow};
+use std::ffi::OsStr;
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -14,9 +15,15 @@ pub fn compile_from_scratch(config: &Config) -> Result<()> {
         Command::new(&config.init[0])
             .args(&config.init[1..])
             .spawn()
-            .unwrap()
+            .context(anyhow!(
+                "Couldn't init. We tried running the command {:?}",
+                &config.init
+            ))?
             .wait()
-            .unwrap();
+            .context(anyhow!(
+                "We failed to finish running the command {:?}",
+                &config.init
+            ))?;
         log::trace!("finished init");
     }
 
@@ -81,30 +88,40 @@ pub fn compile_single(path: &PathBuf, config: &Config) -> Result<()> {
 
             fs::create_dir_all(config.project_root.join(&config.output_root).join(rel_path))
                 .unwrap();
-            let mut child = Command::new("typst")
-                .arg("c")
-                .arg(path)
-                .arg("-") // to stdout
-                .arg("--features")
-                .arg("html")
-                .arg("--format")
-                .arg("html")
-                .arg("--root")
-                .arg(&config.project_root)
-                .stdout(Stdio::piped())
-                .spawn()
-                .unwrap();
+            let mut child = {
+                let args = [
+                    OsStr::new("c"),
+                    OsStr::new(path),
+                    OsStr::new("-"),
+                    OsStr::new("--features"),
+                    OsStr::new("html"),
+                    OsStr::new("--format"),
+                    OsStr::new("html"),
+                    OsStr::new("--root"),
+                    OsStr::new(&config.project_root),
+                ];
 
+                Command::new("typst")
+                    .args(args)
+                    .stdout(Stdio::piped())
+                    .spawn()
+                    .context(anyhow!("Failed to run Typst compiler. Maybe you don't have it installed? We ran `typst` with args: {:?}", args))?
+            };
             if config.post_processing_typ.len() > 0 {
                 child = Command::new(&config.post_processing_typ[0])
                     .args(&config.post_processing_typ[1..])
                     .stdin(child.stdout.unwrap())
                     .stdout(Stdio::piped())
                     .spawn()
-                    .unwrap();
+                    .context(anyhow!(
+                        "Failed to post process. We tried to run the command {:?}",
+                        &config.post_processing_typ
+                    ))?;
             }
 
-            let output = child.wait_with_output()?;
+            let output = child
+                .wait_with_output()
+                .context("Waiting for output of typst and post-processing failed.")?;
 
             fs::create_dir_all(&file_in_dst.parent().ok_or(anyhow!(
                 "Failed trying to create parent directory of {:?}",
