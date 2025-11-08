@@ -65,7 +65,7 @@ pub fn compile_single(path: &PathBuf, config: &Config) -> Result<()> {
             path.to_str().unwrap(),
             file_in_dst.to_str().unwrap()
         );
-    } else if path.extension().is_some() && path.extension().unwrap() == "typ" {
+    } else if path.extension() == Some(&OsStr::new("typ")) {
         log::trace!("here3");
 
         if let Ok(_) = path.strip_prefix(config.project_root.join(&config.template_root)) {
