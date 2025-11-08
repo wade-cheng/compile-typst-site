@@ -9,6 +9,17 @@ use walkdir::WalkDir;
 
 use crate::config::Config;
 
+/// Return paths to the `.typ` files we will process.
+///
+/// Ignores inaccessible such files.
+pub fn typ_files(config: &Config) -> impl Iterator<Item = PathBuf> {
+    WalkDir::new(config.project_root.join(&config.content_root))
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|entry| entry.metadata().unwrap().is_file())
+        .map(|entry| entry.path().to_path_buf())
+}
+
 pub fn compile_from_scratch(config: &Config) -> Result<()> {
     log::info!("running init command");
     if config.init.len() > 0 {
@@ -28,14 +39,7 @@ pub fn compile_from_scratch(config: &Config) -> Result<()> {
     }
 
     log::info!("starting compilation");
-    compile_batch(
-        WalkDir::new(config.project_root.join(&config.content_root))
-            .into_iter()
-            .filter_map(|e| e.ok())
-            .filter(|entry| entry.metadata().unwrap().is_file())
-            .map(|entry| entry.path().to_path_buf()),
-        &config,
-    )?;
+    compile_batch(typ_files(&config), &config)?;
 
     log::info!("compiled project from scratch");
 
