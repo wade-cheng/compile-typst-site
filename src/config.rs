@@ -59,6 +59,8 @@ pub struct Config {
     pub passthrough_copy: Vec<String>,
     #[derivative(Debug = "ignore")]
     pub passthrough_copy_globs: GlobSet,
+    // GlobSet has gnarly debug impl; emit a String version instead.
+    pub passthrough_copy_globs_string_form: Vec<String>,
     pub init: Vec<String>,
     pub post_processing_typ: Vec<String>,
     pub literal_paths: bool,
@@ -102,7 +104,7 @@ impl Config {
         let post_processing_typ = post_processing_typ.unwrap_or(vec![]);
         let literal_paths = literal_paths.unwrap_or(false);
 
-        let passthrough_copy_globs =
+        let (passthrough_copy_globs, passthrough_copy_globs_string_form) =
             Self::compile_globs(&passthrough_copy, &project_root, &content_root)?;
 
         Ok(Self {
@@ -112,6 +114,7 @@ impl Config {
             trace,
             passthrough_copy,
             passthrough_copy_globs,
+            passthrough_copy_globs_string_form,
             init,
             post_processing_typ,
             literal_paths,
@@ -144,8 +147,9 @@ impl Config {
         globs: &[String],
         project_root: &Path,
         content_root: &Path,
-    ) -> Result<GlobSet> {
+    ) -> Result<(GlobSet, Vec<String>)> {
         let mut builder = GlobSetBuilder::new();
+        let mut compiled_globs_string_form = Vec::new();
 
         for glob in globs {
             let glob = project_root
@@ -154,10 +158,10 @@ impl Config {
                 .to_str()
                 .unwrap()
                 .to_string();
-            log::trace!("passthroughcopy glob is: {glob}");
             builder.add(Glob::new(&glob)?);
+            compiled_globs_string_form.push(glob);
         }
-        Ok(builder.build()?)
+        Ok((builder.build()?, compiled_globs_string_form))
     }
 
     fn get_configfile(project_root: &Path) -> Result<ConfigFile> {
