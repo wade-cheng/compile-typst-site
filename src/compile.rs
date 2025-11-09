@@ -9,10 +9,12 @@ use walkdir::WalkDir;
 
 use crate::config::Config;
 
-/// Return paths to the `.typ` files we will process.
+/// Return paths to the files in source we will process.
 ///
+/// This includes data files we ignore, stuff we pass through, typ files, everything.
+/// i.e. we walk through the source dir.
 /// Ignores inaccessible such files.
-pub fn typ_files(config: &Config) -> impl Iterator<Item = PathBuf> {
+pub fn source_files(config: &Config) -> impl Iterator<Item = PathBuf> {
     WalkDir::new(config.project_root.join(&config.content_root))
         .into_iter()
         .filter_map(|e| e.ok())
@@ -39,7 +41,7 @@ pub fn compile_from_scratch(config: &Config) -> Result<()> {
     }
 
     log::info!("starting compilation");
-    compile_batch(typ_files(&config), &config)?;
+    compile_batch(source_files(&config), &config)?;
 
     log::info!("compiled project from scratch");
 
