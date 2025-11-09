@@ -130,5 +130,15 @@ struct ConfigFile {
     ///
     /// Example in the TOML config file: `literal_paths = true`
     literal_paths: Option<bool>,
+    /// Typst cannot yet glob-find multiple files, which is a problem if one wants to list, e.g., all blog posts on a page.
+    /// To work around this, we write all Typst files(?) as a JSON to the project root directory.
+    ///
+    /// We also let you query for data. (You might want the dates of those blog posts to appear on your listing page).
+    /// This is slower than the other options because we have to call `typst query`.
+    ///
+    /// Must be one of "disabled", "enabled", "include-data"
+    ///
+    /// Example in the TOML config file: `file_listing = "enabled"`
+    file_listing: Option<String>,
 }
 ```

@@ -44,6 +44,55 @@ struct ConfigFile {
     ///
     /// Example in the TOML config file: `literal_paths = true`
     literal_paths: Option<bool>,
+    /// Typst cannot yet glob-find multiple files, which is a problem if one wants to list, e.g., all blog posts on a page.
+    /// To work around this, we write all Typst files(?) as a JSON to the project root directory.
+    ///
+    /// We also let you query for data. (You might want the dates of those blog posts to appear on your listing page).
+    /// This is slower than the other options because we have to call `typst query`.
+    ///
+    /// Must be one of "disabled", "enabled", "include-data"
+    ///
+    /// Example in the TOML config file: `file_listing = "enabled"`
+    file_listing: Option<String>,
+}
+
+#[derive(Debug)]
+pub enum FileListing {
+    Disabled,
+    Enabled,
+    IncludeData,
+}
+
+impl FileListing {
+    pub const DISABLED_STR: &str = "disabled";
+    pub const ENABLED_STR: &str = "enabled";
+    pub const INCLUDE_DATA_STR: &str = "include-data";
+    pub const DEFAULT_STR: &str = Self::DISABLED_STR;
+}
+
+impl Default for FileListing {
+    fn default() -> Self {
+        Self::Disabled
+    }
+}
+
+impl TryFrom<String> for FileListing {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> std::result::Result<Self, Self::Error> {
+        match value.as_str() {
+            Self::DISABLED_STR => Ok(FileListing::Disabled),
+            Self::ENABLED_STR => Ok(FileListing::Enabled),
+            Self::INCLUDE_DATA_STR => Ok(FileListing::IncludeData),
+            _ => Err(anyhow!(
+                "TOML parsing error: file_listing must be one of \"{}\", \"{}\", \"{}\", not {}",
+                Self::DISABLED_STR,
+                Self::ENABLED_STR,
+                Self::INCLUDE_DATA_STR,
+                value
+            )),
+        }
+    }
 }
 
 /// Full config after taking in command line arguments, a configuration file, and other post-computations.
@@ -64,6 +113,7 @@ pub struct Config {
     pub init: Vec<String>,
     pub post_processing_typ: Vec<String>,
     pub literal_paths: bool,
+    pub file_listing: FileListing,
     pub project_root: PathBuf,
     pub content_root: PathBuf,
     pub output_root: PathBuf,
@@ -98,11 +148,15 @@ impl Config {
             init,
             post_processing_typ,
             literal_paths,
+            file_listing,
         } = Self::get_configfile(&project_root)?;
         let passthrough_copy = passthrough_copy.unwrap_or(vec![]);
         let init = init.unwrap_or(vec![]);
         let post_processing_typ = post_processing_typ.unwrap_or(vec![]);
         let literal_paths = literal_paths.unwrap_or(false);
+        let file_listing = file_listing
+            .unwrap_or(FileListing::DEFAULT_STR.into())
+            .try_into()?;
 
         let (passthrough_copy_globs, passthrough_copy_globs_string_form) =
             Self::compile_globs(&passthrough_copy, &project_root, &content_root)?;
@@ -118,6 +172,7 @@ impl Config {
             init,
             post_processing_typ,
             literal_paths,
+            file_listing,
             project_root,
             content_root,
             output_root,

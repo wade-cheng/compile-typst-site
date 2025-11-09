@@ -111,6 +111,11 @@ pub fn compile_from_scratch(config: &Config) -> Result<()> {
         log::trace!("finished init");
     }
 
+    for file in source_files(&config) {
+        if let CompileOutput::CompileToPath(path) = CompileOutput::from_full_path(&file, &config)? {
+        }
+    }
+
     log::info!("starting compilation");
     compile_batch(source_files(&config), &config)?;
 
