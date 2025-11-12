@@ -2,7 +2,7 @@
 name = "compile-typst-site"
 description = "Binary tool for static site generation using Typst."
 repository = "https://github.com/wade-cheng/compile-typst-site/"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 license = "MIT"
 exclude = [
