@@ -94,8 +94,8 @@ impl CompileOutput {
 }
 
 pub fn compile_from_scratch(config: &Config) -> Result<()> {
-    log::info!("running init command");
     if config.init.len() > 0 {
+        log::info!("running init command");
         Command::new(&config.init[0])
             .args(&config.init[1..])
             .spawn()
