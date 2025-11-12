@@ -38,4 +38,9 @@ source_suffix = {
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "furo"
+html_theme_options = {
+    "source_repository": "https://github.com/wade-cheng/compile-typst-site/",
+    "source_branch": "main",
+    "source_directory": "docs/",
+}
 # html_static_path = ["_static"]
