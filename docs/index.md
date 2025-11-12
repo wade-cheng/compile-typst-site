@@ -121,3 +121,5 @@ contributing
 compile-typst-site on crates.io <https://crates.io/crates/compile-typst-site/>
 compile-typst-site on GitHub <https://github.com/wade-cheng/compile-typst-site/>
 ```
+
+Read on for more.
