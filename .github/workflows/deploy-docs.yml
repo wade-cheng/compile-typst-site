@@ -27,12 +27,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Sphinx and other dependencies
-        run: pip install -r requirements.txt # assume ubuntu-latest will have pip
+        run: pip install -r docs/requirements.txt # assume ubuntu-latest will have pip
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
       - name: Build with Sphinx
-        run: sphinx-build source build
+        run: sphinx-build docs build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
