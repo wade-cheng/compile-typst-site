@@ -1,10 +1,11 @@
 # compile-typst-site
 
-`compile-typst-site` is a binary utility for static site generation using Typst. It's built to be dead simple (at least conceptually). Let's explain and motivate its use case with an example. Say we've created a directory tree that maps to a website:
+`compile-typst-site` is a binary utility for static site generation using Typst. It takes a directory structure like this:
 
 ```
 $ tree
 .
+├── compile-typst-site.toml
 ├── src/
 │   ├── about.typ
 │   ├── blog/
@@ -20,9 +21,7 @@ $ tree
     └── base.typ
 ```
 
-Converting this to a website by hand would mean running `typst compile` on `index.typ`, `about.typ`, the first blog post, the second, and so on and so on. Also, our index file uses `data.json` to draw something cool on the home page, but we don't need it after that. If I want to generate the site into another folder, clean of unnecessary data, I would need to remember to copy over `style.css` but not `data.json`.
-
-All `compile-typst-site` does is automate this process. It'll compile all `.typ` files it finds, and you can supply a configuration file to tell it what else to copy over. After adding such a configuration file at `compile-typst-site.toml`, we can compile the project and inspect our newly built `_site`:
+and generates a `_site` like this:
 
 ```
 $ compile-typst-site
@@ -46,18 +45,9 @@ $ tree
 │   ├── index.html
 │   └── style.css
 ├── src/
-│   ├── about.typ
-│   ├── blog/
-│   │   ├── post-1.typ
-│   │   ├── post-2.typ
-│   │   ├── post-3.typ
-│   │   └── ...
-│   ├── blog.typ
-│   ├── data.json
-│   ├── index.typ
-│   └── style.css
+│   └── ...
 └── templates/
-    └── base.typ
+    └── ...
 ```
 
 `compile-typst-site` can also watch your project directory. If a source file is changed, it'll only recompile that file. If a template file is changed, it'll recompile all of its dependents.
