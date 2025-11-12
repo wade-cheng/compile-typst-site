@@ -1,6 +1,6 @@
 //! The function to call to kick off the binary.
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use notify_debouncer_full;
 use notify_debouncer_full::DebounceEventResult;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};
@@ -36,16 +36,24 @@ pub fn run(config: &Config) -> Result<()> {
             RecursiveMode::Recursive,
         )?;
         for res in rx {
-            match res {
-                Ok(events) => {
-                    for event in events {
-                        if let EventKind::Create(_) | EventKind::Modify(_) = event.kind {
-                            compile::compile_batch(event.event.paths.into_iter(), &config)?;
-                            // TODO: figure out howo to debug-level log watched compilations
-                        }
+            let events = res.map_err(|errs| {
+                for err in errs {
+                    eprintln!("{:?}", err);
+                }
+
+                anyhow!("File watcher received errors.")
+            })?;
+
+            for event in events {
+                if let EventKind::Create(_) | EventKind::Modify(_) = event.kind {
+                    compile::compile_batch(event.event.paths.clone().into_iter(), &config)?;
+
+                    if event.event.paths.len() == 1 {
+                        log::info!("recompiled path: {:?}", event.event.paths[0]);
+                    } else {
+                        log::info!("recompiled paths: {:?}", event.event.paths);
                     }
                 }
-                Err(errors) => errors.iter().for_each(|error| eprintln!("{error:?}")),
             }
         }
     }

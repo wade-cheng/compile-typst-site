@@ -3,8 +3,10 @@
 use anyhow::{Context, Result, anyhow};
 use std::ffi::OsStr;
 use std::fs;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::mpsc::{self, Sender, TryRecvError};
 use walkdir::WalkDir;
 
 use crate::config::Config;
@@ -96,35 +98,37 @@ impl CompileOutput {
 pub fn compile_from_scratch(config: &Config) -> Result<()> {
     if config.init.len() > 0 {
         log::info!("running init command");
-        Command::new(&config.init[0])
+        let exit_status = Command::new(&config.init[0])
             .args(&config.init[1..])
-            .spawn()
+            .status()
             .context(anyhow!(
                 "Couldn't init. We tried running the command {:?}",
                 &config.init
-            ))?
-            .wait()
-            .context(anyhow!(
-                "We failed to finish running the command {:?}",
-                &config.init
             ))?;
+
+        if !exit_status.success() {
+            return Err(anyhow!(
+                "Running init command failed. Command was {:?}",
+                config.init
+            ));
+        }
         log::trace!("finished init");
     }
 
-    for file in source_files(&config) {
-        if let CompileOutput::CompileToPath(path) = CompileOutput::from_full_path(&file, &config)? {
-        }
-    }
+    // for file in source_files(&config) {
+    //     if let CompileOutput::CompileToPath(path) = CompileOutput::from_full_path(&file, &config)? {
+    //     }
+    // }
 
     log::info!("starting compilation");
-    compile_batch(source_files(&config), &config)?;
+    compile_batch(source_files(&config), &config)?; // todo in here
 
     log::info!("compiled project from scratch");
 
     Ok(())
 }
 
-pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
+pub fn compile_single(path: &Path, config: &Config, failure_sender: Sender<()>) -> Result<()> {
     log::trace!("here1 compiling {}", path.to_str().unwrap());
 
     match CompileOutput::from_full_path(path, config)? {
@@ -150,8 +154,10 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
             );
         }
         CompileOutput::CompileToPath(dst_path) => {
-            let child = {
+            let mut child = {
                 let args = [
+                    OsStr::new("--color"),
+                    OsStr::new("always"),
                     OsStr::new("c"),
                     OsStr::new(&path),
                     OsStr::new("-"),
@@ -166,9 +172,16 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
                 Command::new("typst")
                     .args(args)
                     .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
                     .spawn()
                     .context(anyhow!("Failed to run Typst compiler. Maybe you don't have it installed? We ran `typst` with args: {:?}", args))?
             };
+
+            let mut stderr_reader = child.stderr.take().unwrap();
+            let mut stderr = String::new();
+            stderr_reader.read_to_string(&mut stderr)?;
+            stderr = stderr.replace("\n", "\n      ");
+            log::trace!("captured stderr from typst call:\n      {}", &stderr);
 
             let child = if config.post_processing_typ.len() > 0 {
                 Command::new(&config.post_processing_typ[0])
@@ -188,6 +201,15 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
                 .wait_with_output()
                 .context("Waiting for output of typst and post-processing failed.")?;
 
+            if !output.status.success() {
+                failure_sender.send(())?;
+                return Err(anyhow!(
+                    "Compiling {} failed. Captured stderr from typst was \n      {}",
+                    path.to_str().unwrap(),
+                    stderr,
+                ));
+            }
+
             fs::create_dir_all(&dst_path.parent().unwrap())?;
             fs::write(&dst_path, output.stdout)
                 .context(format!("Failed to write output to {:?}", &dst_path))?;
@@ -204,14 +226,38 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
 }
 
 pub fn compile_batch(paths: impl Iterator<Item = PathBuf>, config: &Config) -> Result<()> {
+    let (failure_tx, failure_rx) = mpsc::channel();
     std::thread::scope(|s| {
+        let mut paths_and_handles = vec![];
         for path in paths {
-            s.spawn(move || {
-                compile_single(&path, &config).unwrap_or_else(|err| eprintln!("{:?}", err)); // TODO: this should fail, but exit(1) borks.
-                log::debug!("compiled {}", path.to_str().unwrap());
-            });
+            let failure_tx = failure_tx.clone();
+            paths_and_handles.push((
+                path.clone(),
+                s.spawn(move || {
+                    compile_single(&path, &config, failure_tx).unwrap_or_else(|err| {
+                        log::info!("{:?}", err);
+                    });
+                }),
+            ));
+        }
+
+        for (path, handle) in paths_and_handles {
+            handle.join().unwrap();
+            log::debug!("compiled {}", path.to_str().unwrap());
         }
     });
+
+    match failure_rx.try_recv() {
+        Ok(_) => {
+            return Err(anyhow!(
+                "Received at least one failure code from calling compilation pipeline (Typst and post-processsing). See the logs."
+            ));
+        }
+        Err(TryRecvError::Empty) => (),
+        Err(TryRecvError::Disconnected) => {
+            return Err(anyhow!("Failure receiver disconnected somehow..."));
+        }
+    }
 
     Ok(())
 }
