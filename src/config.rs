@@ -9,7 +9,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::exit;
 
-/// Build a site with typst.
+// Don't need a Args rustdoc here because our current crate scrapes from the Cargo.toml description I guess??
 #[derive(Clone, Debug, Eq, PartialEq, OnlyArgs)]
 struct Args {
     /// Build and then watch for changes.
