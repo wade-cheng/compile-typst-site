@@ -9,7 +9,7 @@ use std::process::{Command, Stdio};
 use std::sync::mpsc::{self, Sender, TryRecvError};
 use walkdir::WalkDir;
 
-use crate::config::Config;
+use crate::config::{Config, FileListing};
 
 /// Return paths to the files in source we will process.
 ///
@@ -119,6 +119,24 @@ pub fn compile_from_scratch(config: &Config) -> Result<()> {
     //     if let CompileOutput::CompileToPath(path) = CompileOutput::from_full_path(&file, &config)? {
     //     }
     // }
+    match config.file_listing {
+        FileListing::Disabled => {
+            log::trace!("not file listing");
+        }
+        _ => {
+            for file in source_files(&config) {
+                if let CompileOutput::CompileToPath(path) =
+                    CompileOutput::from_full_path(&file, &config)?
+                {}
+            }
+
+            match config.file_listing {
+                FileListing::Disabled => unreachable!(),
+                FileListing::Enabled => todo!(),
+                FileListing::IncludeData => todo!(),
+            }
+        }
+    }
 
     log::info!("starting compilation");
     compile_batch(source_files(&config), &config)?; // todo in here
