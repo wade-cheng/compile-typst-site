@@ -5,6 +5,7 @@ when you're trying to get something done.
 
 ```{toctree}
 installation
+quick_start
 common_file_structures
 common_issues
 ```

@@ -28,4 +28,4 @@ After running `compile-typst-site` again, we get a website!
 
 We can put this on github pages, or Neocities, blah blah. Mention local serving. `site.com/` and `site.com/blog/`.
 
-Detour to explain what exactly the command did, typst c x->y --root, --features html.
+Detour to explain what exactly the command did, `typst c x->y --root, --features html`.

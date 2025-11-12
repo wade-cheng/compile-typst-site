@@ -10,3 +10,7 @@ release tag:
 
 install-locally:
     cargo install --path .
+
+doc:
+    uv pip install -r docs/requirements.txt
+    uv run sphinx-autobuild docs docs_out

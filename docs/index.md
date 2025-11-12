@@ -109,8 +109,8 @@ INFO  [compile_typst_site] compiled project from scratch
 
 tutorials/index
 how-to/index
-reference/index
 explanations/index
+reference/index
 ```
 
 ```{toctree}
