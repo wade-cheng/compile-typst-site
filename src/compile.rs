@@ -192,7 +192,13 @@ pub fn compile_single(path: &Path, config: &Config, failure_sender: Sender<()>) 
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
                     .spawn()
-                    .context(anyhow!("Failed to run Typst compiler. Maybe you don't have it installed? https://typst.app/open-source/#download If you're on Windows, the winget method may be the easiest.\n\nWe ran `typst` with args: {:?}", args))?
+                    .context(anyhow!(
+                        "Failed to run Typst compiler. \
+                        Maybe you don't have it installed? \
+                        https://typst.app/open-source/#download \
+                        We ran `typst` with args: {:?}",
+                        args
+                    ))?
             };
 
             let mut stderr_reader = child.stderr.take().unwrap();
