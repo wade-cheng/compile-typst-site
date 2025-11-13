@@ -5,8 +5,13 @@
   date: "",
   doc,
 ) = {
-  [#metadata(page-title) <page-title>]
-  [#metadata(date) <date>]
+  [#metadata(
+    (
+      "page-title": page-title,
+      "date": date
+    )
+  ) <data>]
+  
   show: base.conf.with(
     page-title: page-title,
     title-override: "wade's garden :: " + page-title,

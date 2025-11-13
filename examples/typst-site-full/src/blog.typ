@@ -29,13 +29,21 @@ Subscribe to this blog with RSS #html.span[#html.elem("svg", attrs: (
 
 #html.hr()
 
-#let posts = json("../posts.json")
+#let files = json("../files.json")
 
-#for post in posts.blog {
-  html.p[
-    #html.a(href: post.path)[#post.pagetitle]
-    #html.span(class: "date")[
-      #utils.format-date(post.date)
+#for (path, queried) in files.pairs() [
+  #if queried.len() > 0 and path.contains("/blog/"){
+    let path = (path
+      .split("/blog/")
+      .at(-1)
+      .replace(regex("\\.typ$"), "/"))
+    let page = queried.at(0).at("value")
+
+    html.p[
+      #html.a(href: path)[#page.page-title]
+      #html.span(class: "date")[
+        #utils.format-date(page.date)
+      ]
     ]
-  ]
-}
+  }
+]

@@ -95,6 +95,88 @@ impl CompileOutput {
     }
 }
 
+/// Return all files as a json object.
+///
+/// For each entry in the object,
+/// - the key is the full path to the original file (that is, in src, not in _site)
+/// - the value is an array
+///   - empty if not IncludeData
+///   - otherwise, returned from querying the file for the <data> tag of the Typst file
+pub fn files_as_json(config: &Config) -> Result<String> {
+    // time to hand-write json :-)
+    let mut json_buffer = String::from("{");
+
+    let (tx, rx) = mpsc::channel::<String>();
+
+    let source_files: Vec<PathBuf> = source_files(&config).collect();
+    let num_messages = source_files.len();
+
+    std::thread::scope(|s| -> Result<()> {
+        for file in source_files {
+            let tx = tx.clone();
+
+            s.spawn(move || -> Result<()> {
+                let key = file.to_string_lossy();
+                let value = if let (FileListing::IncludeData, CompileOutput::CompileToPath(_)) = (
+                    &config.file_listing,
+                    CompileOutput::from_full_path(&file, &config)?,
+                ) {
+                    let args = [
+                        OsStr::new("query"),
+                        OsStr::new(&file),
+                        OsStr::new("<data>"),
+                        OsStr::new("--features"),
+                        OsStr::new("html"),
+                        OsStr::new("--root"),
+                        OsStr::new(&config.project_root),
+                    ];
+
+                    let query_output =
+                        Command::new("typst").args(args).output().context(anyhow!(
+                            "Failed to query <data> in the file {}. \
+                            Maybe you don't have Typst installed? \
+                            We ran `typst` with args: {:?}",
+                            &file.to_string_lossy(),
+                            args
+                        ))?;
+
+                    if query_output.status.success() {
+                        let mut query_json = String::from_utf8(query_output.stdout)?;
+                        if query_json.pop().ok_or(anyhow!("no final char?"))? != '\n' {
+                            return Err(anyhow!("final char was not \n"));
+                        }
+                        query_json
+                    } else {
+                        "[]".to_string()
+                    }
+                } else {
+                    "[]".to_string()
+                };
+
+                let entry = format!("\"{key}\": {value},");
+
+                tx.send(entry)?;
+
+                Ok(())
+            });
+        }
+
+        Ok(())
+    })?;
+
+    for _ in 0..num_messages {
+        json_buffer.push_str(&rx.recv()?);
+    }
+
+    // remove trailing comma
+    assert_eq!(json_buffer.pop(), Some(','));
+
+    // cap it all off
+    json_buffer.push('}');
+
+    Ok(json_buffer)
+}
+
 pub fn compile_from_scratch(config: &Config) -> Result<()> {
     if config.init.len() > 0 {
         log::info!("running init command");
@@ -115,27 +197,15 @@ pub fn compile_from_scratch(config: &Config) -> Result<()> {
         log::trace!("finished init");
     }
 
-    // for file in source_files(&config) {
-    //     if let CompileOutput::CompileToPath(path) = CompileOutput::from_full_path(&file, &config)? {
-    //     }
-    // }
-    match config.file_listing {
-        FileListing::Disabled => {
-            log::trace!("not file listing");
-        }
-        _ => {
-            for file in source_files(&config) {
-                if let CompileOutput::CompileToPath(path) =
-                    CompileOutput::from_full_path(&file, &config)?
-                {}
-            }
-
-            match config.file_listing {
-                FileListing::Disabled => unreachable!(),
-                FileListing::Enabled => todo!(),
-                FileListing::IncludeData => todo!(),
-            }
-        }
+    if let FileListing::Disabled = config.file_listing {
+        log::trace!("not file listing");
+    } else {
+        let listing_path = config.project_root.join("files.json");
+        log::info!(
+            "generating and writing file listing to {}",
+            listing_path.to_string_lossy()
+        );
+        fs::write(&listing_path, &files_as_json(&config)?)?;
     }
 
     log::info!("starting compilation");

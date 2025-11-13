@@ -4,5 +4,5 @@ passthrough_copy = [
     "assets/*",
     "favicon/*"
 ]
-init = ['just', 'list-collections']
 post_processing_typ = ['just', 'post-process']
+file_listing = "include-data"
