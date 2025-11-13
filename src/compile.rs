@@ -6,7 +6,7 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::sync::mpsc::{self, Sender, TryRecvError};
+use std::sync::mpsc::{self};
 use walkdir::WalkDir;
 
 use crate::config::{Config, FileListing};
@@ -216,7 +216,7 @@ pub fn compile_from_scratch(config: &Config) -> Result<()> {
     Ok(())
 }
 
-pub fn compile_single(path: &Path, config: &Config, failure_sender: Sender<()>) -> Result<()> {
+pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
     log::trace!("here1 compiling {}", path.to_str().unwrap());
 
     match CompileOutput::from_full_path(path, config)? {
@@ -296,7 +296,6 @@ pub fn compile_single(path: &Path, config: &Config, failure_sender: Sender<()>) 
                 .context("Waiting for output of typst and post-processing failed.")?;
 
             if !output.status.success() {
-                failure_sender.send(())?;
                 return Err(anyhow!(
                     "Compiling {} failed. Captured stderr from typst was \n      {}",
                     path.to_str().unwrap(),
@@ -320,14 +319,12 @@ pub fn compile_single(path: &Path, config: &Config, failure_sender: Sender<()>) 
 }
 
 pub fn compile_batch(paths: impl Iterator<Item = PathBuf>, config: &Config) -> Result<()> {
-    let (failure_tx, failure_rx) = mpsc::channel();
     std::thread::scope(|s| -> Result<()> {
         let mut paths_and_handles = vec![];
         for path in paths {
-            let failure_tx = failure_tx.clone();
             paths_and_handles.push((
                 path.clone(),
-                s.spawn(move || -> Result<()> { compile_single(&path, &config, failure_tx) }),
+                s.spawn(move || -> Result<()> { compile_single(&path, &config) }),
             ));
         }
 
@@ -338,19 +335,6 @@ pub fn compile_batch(paths: impl Iterator<Item = PathBuf>, config: &Config) -> R
 
         Ok(())
     })?;
-
-    // TODO: since we added error handling to the lambda fns above, do we need this block anymore?
-    match failure_rx.try_recv() {
-        Ok(_) => {
-            return Err(anyhow!(
-                "Received at least one failure code from calling compilation pipeline (Typst and post-processsing). See the logs."
-            ));
-        }
-        Err(TryRecvError::Empty) => (),
-        Err(TryRecvError::Disconnected) => {
-            return Err(anyhow!("Failure receiver disconnected somehow..."));
-        }
-    }
 
     Ok(())
 }
