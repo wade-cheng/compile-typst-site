@@ -251,26 +251,25 @@ pub fn compile_single(path: &Path, config: &Config, failure_sender: Sender<()>) 
 
 pub fn compile_batch(paths: impl Iterator<Item = PathBuf>, config: &Config) -> Result<()> {
     let (failure_tx, failure_rx) = mpsc::channel();
-    std::thread::scope(|s| {
+    std::thread::scope(|s| -> Result<()> {
         let mut paths_and_handles = vec![];
         for path in paths {
             let failure_tx = failure_tx.clone();
             paths_and_handles.push((
                 path.clone(),
-                s.spawn(move || {
-                    compile_single(&path, &config, failure_tx).unwrap_or_else(|err| {
-                        log::info!("{:?}", err);
-                    });
-                }),
+                s.spawn(move || -> Result<()> { compile_single(&path, &config, failure_tx) }),
             ));
         }
 
         for (path, handle) in paths_and_handles {
-            handle.join().unwrap();
+            handle.join().unwrap()?;
             log::debug!("compiled {}", path.to_str().unwrap());
         }
-    });
 
+        Ok(())
+    })?;
+
+    // TODO: since we added error handling to the lambda fns above, do we need this block anymore?
     match failure_rx.try_recv() {
         Ok(_) => {
             return Err(anyhow!(
