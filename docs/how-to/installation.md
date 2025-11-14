@@ -1,6 +1,10 @@
 # Installation
 
-Make sure you have [Typst](https://typst.app/open-source/#download) installed.
+```{important}
+To compile your Typst files, we use the Typst CLI. Make sure you have it [installed](https://typst.app/open-source/#download).
+
+If you are on Windows and are unfamiliar with downloading CLIs, the `winget` method may be easiest.
+```
 
 After Typst is installed, use one of the `compile-typst-site` installation methods below.
 

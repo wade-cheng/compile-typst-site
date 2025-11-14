@@ -1,6 +1,6 @@
 # Part 1: Installation
 
-This tutorial section is unfinished. Here's a list of what we would want to go over, and what you might consider looking up if you're unfamiliar:
+This part is unfinished. Here's a list of what we would want to go over, and what you might consider looking up if you're unfamiliar:
 
 - general commmand line crash course
   - traversal (`cd`)
