@@ -104,6 +104,14 @@ INFO  [compile_typst_site] compiled project from scratch
 ```
 ````
 
+## Continue Reading
+
+For more information, visit:
+
+- [](./tutorials/beginner/index.md): start learning
+- [](./how-to/quick_start.md): jump right in
+- [](./explanations/why_us.md): a comparison of options in the Typst site generation space
+
 ```{toctree}
 :hidden:
 
@@ -121,5 +129,3 @@ contributing
 compile-typst-site on crates.io <https://crates.io/crates/compile-typst-site/>
 compile-typst-site on GitHub <https://github.com/wade-cheng/compile-typst-site/>
 ```
-
-Read on for more.

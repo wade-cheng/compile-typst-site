@@ -28,7 +28,7 @@ If file watching is turned on, changes in `src` will only recompile that file. C
 
 ## Config File API
 
-The config file at `compile-typst-site.toml` is specified as such:
+The configuration file at `compile-typst-site.toml` is specified as such:
 
 ```rust
 struct ConfigFile {

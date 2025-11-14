@@ -27,7 +27,7 @@ For example:
     └── base.typ
 ```
 
-This layout is super easy to deal with because all the links between pages are hardcoded. For example, notice how our template in [](../tutorials/03_templates.md) includes a navigation bar with hardcoded links to each page.
+This layout is super easy to deal with because all the links between pages are hardcoded. For example, notice how our template in [](../tutorials/beginner/03_templates.md) includes a navigation bar with hardcoded links to each page.
 
 To use this layout, all you need to do is specify what you need to copy over:
 
@@ -66,7 +66,57 @@ For example:
 
 Unfortunately, until [typst/issues/2123](https://github.com/typst/typst/issues/2123) is implemented, this can't be done in native Typst.
 
-A solution is to write a script that
+### Solution 1: `file_listing`
+
+You can set `file_listing` in the configuration file to `"enabled"` or `"include-data"`, and read the JSON file it creates from Typst. See the full example.
+
+Notice the way we set up the template file to let all its templatees be queried:
+
+```typst
+#let conf(
+  page-title: "",
+  date: "",
+  doc,
+) = {
+  [#metadata(
+    (
+      "page-title": page-title,
+      "date": date
+    )
+  ) <data>]
+
+  // ...
+}
+```
+
+and how we use that in the blog page:
+
+```typst
+#let files = json("../files.json")
+
+#for (path, queried) in files.pairs() [
+  #if queried.len() > 0 and path.contains("/blog/"){
+    let path = (path
+      .split("/blog/")
+      .at(-1)
+      .replace(regex("\\.typ$"), "/"))
+    let page = queried.at(0).at("value")
+
+    html.p[
+      #html.a(href: path)[#page.page-title]
+      #html.span(class: "date")[
+        #utils.format-date(page.date)
+      ]
+    ]
+  }
+]
+```
+
+### Solution 2: `init` script
+
+Before `file_listing` was implemented, you could create its functionality manually. Depending on your own script may still be desired if you require some feature we don't have.
+
+You can write a script that
 
 - reads all the titles and descriptions in your blog posts, maybe with `typst query`
 - writes it to some file
@@ -92,7 +142,3 @@ To run your script every time you update a template or compile the full site, ad
 # compile-typst-site.toml
 init = ['python', 'list-collections.py']
 ```
-
-The [full example](https://github.com/wade-cheng/compile-typst-site/tree/main/examples/typst-site-full) does this. A tutorial is in scope of these docs, but not written.[^3]
-
-[^3]: Pull requests appreciated!
