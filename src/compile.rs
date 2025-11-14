@@ -390,8 +390,8 @@ pub fn compile_batch(paths: impl Iterator<Item = PathBuf>, config: &Config) -> R
         }
 
         for (path, handle) in paths_and_handles {
+            log::debug!("trying to compile {}", path.to_str().unwrap());
             handle.join().unwrap()?;
-            log::debug!("compiled {}", path.to_str().unwrap());
         }
 
         Ok(())
