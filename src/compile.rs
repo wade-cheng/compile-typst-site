@@ -7,6 +7,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::mpsc::{self};
+use std::thread::JoinHandle;
 use walkdir::WalkDir;
 
 use crate::config::{Config, FileListing};
@@ -248,6 +249,7 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
             );
         }
         CompileOutput::CompileToPath(dst_path) => {
+            log::trace!("compile_single:t10");
             let mut child = {
                 let args = [
                     OsStr::new("--color"),
@@ -262,6 +264,12 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
                     OsStr::new("--root"),
                     OsStr::new(&config.project_root),
                 ];
+                log::trace!("compile_single:t11");
+                log::trace!(
+                    "compile_single:path {:?}, trying to run typst with args: {:?}",
+                    &path,
+                    args
+                );
 
                 Command::new("typst")
                     .args(args)
@@ -277,35 +285,69 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
                     ))?
             };
 
-            let mut stderr_reader = child.stderr.take().unwrap();
-            let mut stderr = String::new();
-            stderr_reader.read_to_string(&mut stderr)?;
-            stderr = stderr.replace("\n", "\n      ");
-            log::trace!("captured stderr from typst call:\n      {}", &stderr);
+            let mut typst_stderr = child.stderr.take().unwrap();
+            let typst_stderr_msg_handle = std::thread::spawn(move || {
+                let mut stderr = String::from("Captured stderr from typst was\n");
+                typst_stderr
+                    .read_to_string(&mut stderr)
+                    .unwrap_or_else(|_| {
+                        eprintln!("Typst stderr wasn't valid UTF-8.");
+                        0 // dummy number to type check
+                    });
+                stderr = stderr.replace("\n", "\n      ");
+                log::trace!("captured stderr from typst call:\n      {}", &stderr);
+                stderr
+            });
 
-            let child = if config.post_processing_typ.len() > 0 {
-                Command::new(&config.post_processing_typ[0])
+            let mut pproc_stderr_msg_handle: Option<JoinHandle<String>> = None;
+            if config.post_processing_typ.len() > 0 {
+                child = Command::new(&config.post_processing_typ[0])
                     .args(&config.post_processing_typ[1..])
                     .stdin(child.stdout.context("Found no child")?)
                     .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
                     .spawn()
                     .context(anyhow!(
                         "Failed to post process. We tried to run the command {:?}",
                         &config.post_processing_typ
-                    ))?
-            } else {
-                child
-            };
+                    ))?;
+
+                let mut pproc_stderr = child.stderr.take().unwrap();
+                pproc_stderr_msg_handle = Some(std::thread::spawn(move || {
+                    let mut stderr = String::from("Captured stderr from post_processing was \n");
+                    pproc_stderr
+                        .read_to_string(&mut stderr)
+                        .unwrap_or_else(|_| {
+                            eprintln!("post_processing stderr wasn't valid UTF-8.");
+                            0 // dummy number to type check
+                        });
+                    stderr = stderr.replace("\n", "\n      ");
+                    log::trace!(
+                        "captured stderr from post_processing call:\n      {}",
+                        &stderr
+                    );
+                    stderr
+                }));
+            }
+
+            log::trace!("compile_single:t14");
 
             let output = child
                 .wait_with_output()
                 .context("Waiting for output of typst and post-processing failed.")?;
 
+            log::trace!("compile_single:t15");
+
             if !output.status.success() {
+                let pproc_stderr_msg = match pproc_stderr_msg_handle {
+                    Some(handle) => handle.join().unwrap(),
+                    None => String::from("post_processing was not run"),
+                };
                 return Err(anyhow!(
-                    "Compiling {} failed. Captured stderr from typst was \n      {:?}",
+                    "Compiling {} failed.\n{}\n{}",
                     path.to_string_lossy(),
-                    stderr,
+                    typst_stderr_msg_handle.join().unwrap(),
+                    pproc_stderr_msg
                 ));
             }
 
