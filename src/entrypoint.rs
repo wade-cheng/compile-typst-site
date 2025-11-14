@@ -13,7 +13,7 @@ use crate::logging;
 pub fn run(config: &Config) -> Result<()> {
     logging::init(&config);
 
-    log::trace!("loaded configuration: {:#?}", &config);
+    log::debug!("loaded configuration: {:#?}", &config);
 
     if config.ignore_initial {
         log::info!("ignoring initial compile from scratch");
