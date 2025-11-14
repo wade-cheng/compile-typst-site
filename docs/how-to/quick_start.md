@@ -11,9 +11,7 @@ This how-to guide is for people who want to hit the ground running. If you want 
 Get the sample site from <https://github.com/wade-cheng/compile-typst-site-hardcoded-links-example>. Either download the zip by clicking [here](https://github.com/wade-cheng/compile-typst-site-hardcoded-links-example/archive/refs/heads/main.zip) or running
 
 ```
-
 $ git clone https://github.com/wade-cheng/compile-typst-site-hardcoded-links-example
-
 ```
 
 ## Compile
@@ -21,9 +19,7 @@ $ git clone https://github.com/wade-cheng/compile-typst-site-hardcoded-links-exa
 Compile the project into a site by `cd`ing into the project root directory and running
 
 ```
-
 $ compile-typst-site
-
 ```
 
 ## Update files
@@ -31,9 +27,7 @@ $ compile-typst-site
 You can either simply make changes and recompile on every change, or use
 
 ```
-
 $ compile-typst-site --watch --ignore-initial
-
 ```
 
 and then save your changes.
