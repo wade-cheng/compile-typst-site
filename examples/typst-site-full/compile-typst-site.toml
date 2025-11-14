@@ -1,7 +1,7 @@
 passthrough_copy = [
     "*.css",
-    "*.png",
-    "assets/*",
+    "**/*.png",
+    "assets/**/*",
     "favicon/*"
 ]
 post_processing_typ = ['just', 'post-process']

@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result, anyhow};
 use derivative::Derivative;
-use globset::{Glob, GlobSet, GlobSetBuilder};
+use glob::Pattern;
 use onlyargs_derive::OnlyArgs;
 use serde::Deserialize;
 use std::fs;
@@ -107,8 +107,8 @@ pub struct Config {
     pub trace: bool,
     pub passthrough_copy: Vec<String>,
     #[derivative(Debug = "ignore")]
-    pub passthrough_copy_globs: GlobSet,
-    // GlobSet has gnarly debug impl; emit a String version instead.
+    pub passthrough_copy_globs: Vec<Pattern>,
+    // Pattern has gnarly debug impl; emit a String version instead.
     pub passthrough_copy_globs_string_form: Vec<String>,
     pub init: Vec<String>,
     pub post_processing_typ: Vec<String>,
@@ -199,24 +199,26 @@ impl Config {
     }
 
     fn compile_globs(
-        globs: &[String],
+        string_globs: &[String],
         project_root: &Path,
         content_root: &Path,
-    ) -> Result<(GlobSet, Vec<String>)> {
-        let mut builder = GlobSetBuilder::new();
+    ) -> Result<(Vec<Pattern>, Vec<String>)> {
+        let mut compiled_globs = Vec::new();
         let mut compiled_globs_string_form = Vec::new();
 
-        for glob in globs {
-            let glob = project_root
+        for glob in string_globs {
+            let string_glob = project_root
                 .join(content_root)
                 .join(glob)
                 .to_str()
-                .context(anyhow!("{glob} not to str"))?
-                .to_string();
-            builder.add(Glob::new(&glob)?);
-            compiled_globs_string_form.push(glob);
+                .context(anyhow!("{glob} not utf8"))?
+                .to_owned();
+            let compiled_glob = string_glob.parse::<Pattern>()?;
+
+            compiled_globs.push(compiled_glob);
+            compiled_globs_string_form.push(string_glob);
         }
-        Ok((builder.build()?, compiled_globs_string_form))
+        Ok((compiled_globs, compiled_globs_string_form))
     }
 
     fn get_configfile(project_root: &Path) -> Result<ConfigFile> {
