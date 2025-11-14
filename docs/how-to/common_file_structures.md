@@ -2,7 +2,7 @@
 
 In short, anything that you can implement in native Typst is easy, because you just do that and then run `compile-typst-site`. If you can't do something in native Typst, you will have to add third party scripts to your workflow. They can run automatically when added to the config file.
 
-## Hardcoded links
+## Hardcoded internal links
 
 The simplest possible layout that sees benefit from using `compile-typst-site` has the following characteristics:
 
