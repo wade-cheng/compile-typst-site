@@ -1,6 +1,6 @@
 //! `compile-typst-site` project configuration, pulling from command-line arguments and a config file.
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use derivative::Derivative;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use onlyargs_derive::OnlyArgs;
@@ -211,7 +211,7 @@ impl Config {
                 .join(content_root)
                 .join(glob)
                 .to_str()
-                .unwrap()
+                .context(anyhow!("{glob} not to str"))?
                 .to_string();
             builder.add(Glob::new(&glob)?);
             compiled_globs_string_form.push(glob);

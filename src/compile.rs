@@ -65,21 +65,23 @@ impl CompileOutput {
         } else if let Ok(path_to_typ_in_src) =
             full_path.strip_prefix(config.project_root.join(&config.content_root))
         {
-            let rel_parent = path_to_typ_in_src.parent().unwrap();
+            let rel_parent = path_to_typ_in_src.parent().context("Found no parent.")?;
             let parent_dir_in_dst = config
                 .project_root
                 .join(&config.output_root)
                 .join(rel_parent);
-            let file_in_dst =
-                if full_path.file_name().unwrap() == "index.typ" || config.literal_paths {
-                    let mut file_in_dst = parent_dir_in_dst.join(full_path.file_name().unwrap());
-                    file_in_dst.set_extension("html");
-                    file_in_dst
-                } else {
-                    parent_dir_in_dst
-                        .join(full_path.file_stem().unwrap())
-                        .join("index.html")
-                };
+            let file_in_dst = if full_path.file_name().context("Found no file name")? == "index.typ"
+                || config.literal_paths
+            {
+                let mut file_in_dst =
+                    parent_dir_in_dst.join(full_path.file_name().context("Found no file name.")?);
+                file_in_dst.set_extension("html");
+                file_in_dst
+            } else {
+                parent_dir_in_dst
+                    .join(full_path.file_stem().context("Found no file stem")?)
+                    .join("index.html")
+            };
 
             log::trace!(
                 "CompileOutput::from_full_path({:?}, config) computed CompileToPath to {:?}",
@@ -217,7 +219,7 @@ pub fn compile_from_scratch(config: &Config) -> Result<()> {
 }
 
 pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
-    log::trace!("here1 compiling {}", path.to_str().unwrap());
+    log::trace!("here1 compiling {}", path.to_string_lossy());
 
     match CompileOutput::from_full_path(path, config)? {
         CompileOutput::Noop => (),
@@ -230,15 +232,19 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
             // ... what if someone puts their template code in their src folder?
         }
         CompileOutput::Passthrough(dst_path) => {
-            fs::create_dir_all(&dst_path.parent().unwrap())?;
+            fs::create_dir_all(
+                &dst_path
+                    .parent()
+                    .context(anyhow!("Couldn't find parent."))?,
+            )?;
 
             fs::copy(path, &dst_path)
                 .context(format!("Failed to write output to {:?}", &dst_path))?;
 
             log::trace!(
                 "passthroughcopied {} to {}",
-                path.to_str().unwrap(),
-                dst_path.to_str().unwrap()
+                path.to_string_lossy(),
+                dst_path.to_string_lossy()
             );
         }
         CompileOutput::CompileToPath(dst_path) => {
@@ -280,7 +286,7 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
             let child = if config.post_processing_typ.len() > 0 {
                 Command::new(&config.post_processing_typ[0])
                     .args(&config.post_processing_typ[1..])
-                    .stdin(child.stdout.unwrap())
+                    .stdin(child.stdout.context("Found no child")?)
                     .stdout(Stdio::piped())
                     .spawn()
                     .context(anyhow!(
@@ -297,20 +303,22 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
 
             if !output.status.success() {
                 return Err(anyhow!(
-                    "Compiling {} failed. Captured stderr from typst was \n      {}",
-                    path.to_str().unwrap(),
+                    "Compiling {} failed. Captured stderr from typst was \n      {:?}",
+                    path.to_string_lossy(),
                     stderr,
                 ));
             }
 
-            fs::create_dir_all(&dst_path.parent().unwrap())?;
+            log::trace!("compile_single:t16");
+
+            fs::create_dir_all(&dst_path.parent().context("Found no parent.")?)?;
             fs::write(&dst_path, output.stdout)
                 .context(format!("Failed to write output to {:?}", &dst_path))?;
 
             log::trace!(
                 "typfile compiled {} to {}",
-                path.to_str().unwrap(),
-                dst_path.to_str().unwrap()
+                path.to_string_lossy(),
+                dst_path.to_string_lossy()
             );
         }
     };
