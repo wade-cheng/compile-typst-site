@@ -7,7 +7,6 @@ use crate::config::Config;
 
 pub fn init(config: &Config) {
     SimpleLogger::new()
-        .without_timestamps()
         .with_level(LevelFilter::Off)
         .with_module_level(
             "compile_typst_site",
