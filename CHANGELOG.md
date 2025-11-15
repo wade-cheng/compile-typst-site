@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `--path` arg to CLI
+- Yet more docs.
+
 ## [1.0.0] - 2025-11-14
 
 ### Added

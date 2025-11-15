@@ -36,6 +36,9 @@ $ cargo binstall compile-typst-site
 
 You probably know what you're doing.
 
+> [!NOTE]
+> The latest stable versions are the releases. They can be found above, or tagged on Github. The `main` branch, if ahead of a stable release, has alpha content. But it passed the test suite, and probably works fine. Other branches like `wade-cheng/dev` are wild territory. Beware.
+
 ```
 # from github
 $ cargo install --git https://github.com/wade-cheng/compile-typst-site.git
