@@ -1,0 +1,4 @@
+passthrough_copy = [
+    "style.css",
+    "*.png",
+]

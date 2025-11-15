@@ -1,0 +1,8 @@
+#import "../../templates/blog_post.typ": conf
+
+#show: conf.with(
+    page-title: "aa",
+    date: "1000-10-10",
+)
+
+talk about me dropping my fountain pen into the rocks

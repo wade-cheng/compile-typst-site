@@ -1,0 +1,14 @@
+name: Run test suite
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: cargo test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cargo-bins/cargo-binstall@v1.15.10
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo binstall --no-confirm typst-cli
+      - run: cargo build
+      - run: cargo test --all-features

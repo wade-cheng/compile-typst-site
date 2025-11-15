@@ -1,0 +1,19 @@
+---
+title: everything is a div and the field of statistics
+tags: ["blog-post"]
+date: 2025-10-22
+description:
+layout: "blog_post.njk"
+---
+
+<p>
+    write about how these two have a connection of all time in the sense that
+    does it really matter what the internals look like if we get a good output?
+</p>
+
+<p>
+    ie framework div soup vs semantic HTML and classic explainable statistics
+    (mult linreg) vs modern ML and NNs???
+</p>
+
+<p>Not sure if i'm cooking.</p>

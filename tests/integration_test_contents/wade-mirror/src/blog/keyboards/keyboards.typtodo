@@ -1,0 +1,51 @@
+#import "../../templates/blog_post.typ": conf
+
+#show: conf.with(
+  page-title: "keyboards",
+  date: "2025-11-07",
+)
+
+My daily driver is pretty cute! It's an ANSI layout 60%#footnote[60% denotes the size of the keyboard---it has about 60% of the keys of one that's"full-size." Search up the Anne Pro 2 to see what I mean. The ANSI layout denotes how those keys are laid out. For example, my Tab, Caps Lock, and Left Shift keys are of increasing width,  while ISO has a narrow LShift, giving it an extra key on that row: #link("https://commons.wikimedia.org/wiki/File:Physical_keyboard_layouts_comparison_ANSI_ISO_KS_ABNT_JIS.png")[wikimedia.org example image].] with off brand keycaps: purple, decals on non-alphanumeric keys in the style of those ink(?) paintings of lush Chinese mountains, with the symbols written on the front side instead of top. I think they're doubleshot PBT. I had to keep the stock shift, enter, and space keys because the manafacturing tolerances were bad enough that they don't fit on the stems---I think it gives it character :3 My messed up little item \<3
+
+Talk about HK/Celeste keybinds? about link hints? wanting a split keyboard and to build one myself? Wacky bluetooth?
+
+I prefer keyboards with deep travel distances. 
+
+```
+// my HK/Celeste layout (HK:S pending)
+// https://www.keyboard-layout-editor.com/##@@_a:7%3B&=&_x:1%3B&=&=&=&=&_x:0.5%3B&=&=&=&=&_x:0.5%3B&=&=&=&=&_x:0.25%3B&=&=&=%3B&@_y:0.5%3B&=&=&=&=&=4&=&=&=&=&=&=&=&=&_w:2%3B&=&_x:0.25%3B&=&=&=&_x:0.25%3B&=&=&=&=%3B&@_w:1.5%3B&=Tab&=&=W&=E&=R&=&=&=&=&=&=&=&=&_w:1.5%3B&=&_x:0.25%3B&=&=&=&_x:0.25%3B&=&=8&=9&_h:2%3B&=%3B&@_w:1.75%3B&=&=&=&=&=&=&=&=&=&=&=&=&_w:2.25%3B&=&_x:3.5%3B&=4&=5&=6%3B&@_w:2.25%3B&=&=&=&=&=&=&=&=&=&=&=&_w:2.75%3B&=&_x:1.25%3B&=&_x:1.25%3B&=&=&=&_h:2%3B&=%3B&@_w:1.25%3B&=&_w:1.25%3B&=&_w:1.25%3B&=&_w:6.25%3B&=Space&_w:1.25%3B&=&_w:1.25%3B&=&_w:1.25%3B&=&_w:1.25%3B&=&_x:0.25%3B&=&=&=%E2%86%92&_x:0.25&w:2%3B&=0&=
+[{a:7},"",{x:1},"","","","",{x:0.5},"","","","",{x:0.5},"","","","",{x:0.25},"","",""],
+[{y:0.5},"","","","","4","","","","","","","","",{w:2},"",{x:0.25},"","","",{x:0.25},"","","",""],
+[{w:1.5},"Tab","","W","E","R","","","","","","","","",{w:1.5},"",{x:0.25},"","","",{x:0.25},"","8","9",{h:2},""],
+[{w:1.75},"","","","","","","","","","","","",{w:2.25},"",{x:3.5},"4","5","6"],
+[{w:2.25},"","","","","","","","","","","",{w:2.75},"",{x:1.25},"",{x:1.25},"","","",{h:2},""],
+[{w:1.25},"",{w:1.25},"",{w:1.25},"",{w:6.25},"Space",{w:1.25},"",{w:1.25},"",{w:1.25},"",{w:1.25},"",{x:0.25},"","","→",{x:0.25,w:2},"0",""]
+```
+
+#html.div(class: "scroll-wrapper")[
+  #html.img(src: "hollow_knight_binds.png")
+]
+
+#import "@preview/booktabs:0.0.4": *
+#show: booktabs-default-table-style
+#table(
+  columns: 2,
+  // align: (left, left),
+  toprule(), // added by this package
+  table.header(
+    [Key],
+    [Action],
+  ),
+  midrule(), // added by this package
+  [`KP{8,4,5,6}`], [Directional movement],
+  [`KP9`], [Utility],
+  [`KP0`], [Utility],
+  [`LeftArrow`], [Utility],
+  [`W`], [Heavy Attack],
+  [`E`], [Jump],
+  [`R`], [Normal Attack],
+  [`Space`], [Dash],
+  [`4`], [Inventory],
+  [`Tab`], [Quick Menu/Map],
+  bottomrule() // added by this package
+)

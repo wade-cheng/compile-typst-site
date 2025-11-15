@@ -12,6 +12,8 @@ use std::process::exit;
 // Don't need a Args rustdoc here because our current crate scrapes from the Cargo.toml description I guess??
 #[derive(Clone, Debug, Eq, PartialEq, OnlyArgs)]
 struct Args {
+    /// Use the specified path as the project root.
+    path: Option<String>,
     /// Build and then watch for changes.
     watch: bool,
     /// Ignore initial full-site compilation step.
@@ -119,7 +121,7 @@ pub struct Config {
     pub output_root: PathBuf,
     pub template_root: PathBuf,
 }
-const CONFIG_FNAME: &str = "compile-typst-site.toml";
+pub const CONFIG_FNAME: &str = "compile-typst-site.toml";
 
 impl Config {
     pub fn new() -> Self {
@@ -135,13 +137,18 @@ impl Config {
         let template_root = PathBuf::from("templates");
 
         let Args {
+            path,
             watch,
             ignore_initial,
             verbose,
             trace,
         } = onlyargs::parse()?;
 
-        let project_root = Self::get_project_root()?;
+        let project_root = if let Some(path) = path {
+            path.parse()?
+        } else {
+            Self::get_project_root()?
+        };
 
         let ConfigFile {
             passthrough_copy,
@@ -222,9 +229,25 @@ impl Config {
     }
 
     fn get_configfile(project_root: &Path) -> Result<ConfigFile> {
+        const PROJ_ROOT_REPLACEE: &str = "$PROJECT_ROOT";
+
         let file = project_root.join(CONFIG_FNAME);
         let contents = fs::read_to_string(file)?;
-        let config = toml::from_str(&contents)?;
+        let mut config: ConfigFile = toml::from_str(&contents)?;
+
+        config.init = config.init.map(|init_args| {
+            init_args
+                .into_iter()
+                .map(|arg| arg.replace(PROJ_ROOT_REPLACEE, &project_root.to_string_lossy()))
+                .collect()
+        });
+        config.post_processing_typ = config.post_processing_typ.map(|init_args| {
+            init_args
+                .into_iter()
+                .map(|arg| arg.replace(PROJ_ROOT_REPLACEE, &project_root.to_string_lossy()))
+                .collect()
+        });
+
         Ok(config)
     }
 }

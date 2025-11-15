@@ -1,0 +1,8 @@
+#import "../../templates/blog_post.typ": conf
+
+#show: conf.with(
+  page-title: "movement",
+  date: "2025-11-14",
+)
+
+Pretty sure video games have influenced how I move about. Imagine Minecraft, where people walk about, stop dead in their tracks, turn around, keep moving, look about in haphazard directions.
