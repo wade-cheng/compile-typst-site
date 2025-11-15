@@ -1,8 +1,9 @@
 use anyhow::Result;
-use compile_typst_site::config::Config;
+use compile_typst_site::internals::config::Config;
+use compile_typst_site::internals::entrypoint;
 
 fn main() -> Result<()> {
-    compile_typst_site::entrypoint::run(&Config::new())?;
+    entrypoint::run(&Config::new())?;
 
     Ok(())
 }

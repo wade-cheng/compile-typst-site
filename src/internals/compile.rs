@@ -11,7 +11,7 @@ use std::sync::mpsc::{self};
 use std::thread::JoinHandle;
 use walkdir::WalkDir;
 
-use crate::config::{Config, FileListing};
+use crate::internals::config::{Config, FileListing};
 
 /// Return paths to the files in source we will process.
 ///

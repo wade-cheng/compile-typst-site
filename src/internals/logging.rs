@@ -3,7 +3,7 @@
 use log::LevelFilter;
 use simple_logger::SimpleLogger;
 
-use crate::config::Config;
+use crate::internals::config::Config;
 
 pub fn init(config: &Config) {
     SimpleLogger::new()
