@@ -6,9 +6,9 @@ use notify_debouncer_full::DebounceEventResult;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};
 use std::{sync::mpsc, time::Duration};
 
-use crate::compile;
-use crate::config::Config;
-use crate::logging;
+use crate::internals::compile;
+use crate::internals::config::Config;
+use crate::internals::logging;
 
 pub fn run(config: &Config) -> Result<()> {
     logging::init(&config);

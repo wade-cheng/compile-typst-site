@@ -1,7 +1,7 @@
 mod util;
 use std::{env, fs, io};
 
-use compile_typst_site::config::CONFIG_FNAME;
+use compile_typst_site::internals::config::CONFIG_FNAME;
 
 use crate::util::IntegrationTest;
 
