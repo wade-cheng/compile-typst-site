@@ -1,4 +1,4 @@
-# pygame-web.github.io
+# Contributing
 
 The documentation is built with [sphinx-doc](https://www.sphinx-doc.org) and the
 [furo](https://pradyunsg.me/furo/) theme. We also recommend using
