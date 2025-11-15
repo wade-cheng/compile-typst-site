@@ -50,4 +50,4 @@ $ tree
     └── ...
 ```
 
-Read more at the docs: <https://wade-cheng.com/compile-typst-site/>.
+For more, visit the docs: <https://wade-cheng.com/compile-typst-site/>.
