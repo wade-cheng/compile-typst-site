@@ -1,5 +1,9 @@
 # Contributing
 
+See <https://wade-cheng.com/compile-typst-site/contributing.html>.
+
+The rest of this document describes how to build the documentation.
+
 The documentation is built with [sphinx-doc](https://www.sphinx-doc.org) and the
 [furo](https://pradyunsg.me/furo/) theme. We also recommend using
 `sphinx-autobuild`.
