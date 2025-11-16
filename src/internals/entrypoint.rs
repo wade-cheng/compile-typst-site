@@ -6,7 +6,7 @@ use notify_debouncer_full::DebounceEventResult;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};
 use std::{sync::mpsc, time::Duration};
 
-use crate::internals::compile;
+use crate::internals::compile::{self, CompileOutput};
 use crate::internals::config::Config;
 use crate::internals::logging;
 
@@ -14,6 +14,15 @@ pub fn run(config: &Config) -> Result<()> {
     logging::init(&config);
 
     log::debug!("loaded configuration: {:#?}", &config);
+
+    #[cfg(feature = "serve")]
+    {
+        use tokio::runtime::Runtime;
+        let rt = Runtime::new()?;
+        rt.spawn(crate::internals::serve::serve());
+        println!("STARTING STUFF");
+        loop {}
+    }
 
     if config.ignore_initial {
         log::info!("ignoring initial compile from scratch");
@@ -49,6 +58,15 @@ pub fn run(config: &Config) -> Result<()> {
         for event in events {
             if let EventKind::Create(_) | EventKind::Modify(_) = event.kind {
                 compile::compile_batch(event.event.paths.clone().into_iter(), &config)?;
+
+                for path in &event.event.paths {
+                    match CompileOutput::from_full_path(path, config)? {
+                        CompileOutput::Noop => (),
+                        _ => {}
+                    }
+                }
+                // CompileOutput::Noop => (),
+                // CompileOutput::RecompileAll => {
 
                 if event.event.paths.len() == 1 {
                     log::info!("recompiled path: {:?}", event.event.paths[0]);
