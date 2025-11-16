@@ -15,14 +15,11 @@ pub fn run(config: &Config) -> Result<()> {
 
     log::debug!("loaded configuration: {:#?}", &config);
 
-    #[cfg(feature = "serve")]
-    {
-        use tokio::runtime::Runtime;
-        let rt = Runtime::new()?;
-        rt.spawn(crate::internals::serve::serve());
-        println!("STARTING STUFF");
-        loop {}
-    }
+    use tokio::runtime::Runtime;
+    let rt = Runtime::new()?;
+    rt.spawn(crate::internals::serve::serve());
+    println!("STARTING STUFF");
+    loop {}
 
     if config.ignore_initial {
         log::info!("ignoring initial compile from scratch");
