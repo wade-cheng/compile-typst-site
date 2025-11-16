@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--path` arg to CLI.
 - Yet more docs.
+- Implement local file serving, binding to the output of linear search over ports 8000 to 8050.
 
 ### Changed
 
