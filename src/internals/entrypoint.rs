@@ -26,12 +26,15 @@ pub fn run(config: &Config) -> Result<()> {
     }
 
     // if we drop this runtime, we are in for a bad time. we don't get serving.
-    let rt = tokio::runtime::Runtime::new()?;
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(4)
+        .enable_io()
+        .build()?;
     let reload_tx = if config.serve {
-        println!("SERVING ");
         let (reload_tx, reload_rx) = mpsc::channel::<()>();
 
-        rt.spawn(crate::internals::serve::serve(reload_rx));
+        let path_to_site = config.project_root.join(&config.output_root);
+        rt.spawn(crate::internals::serve::serve(reload_rx, path_to_site));
 
         Some(reload_tx)
     } else {
