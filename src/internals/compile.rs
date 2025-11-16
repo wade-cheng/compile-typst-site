@@ -379,6 +379,10 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
     Ok(())
 }
 
+/// Blocks until batch of paths are compiled.
+///
+/// Each path is compiled under a separate thread. Paths can be anywhere under src or templates.
+/// Calling this function on paths outside those folders mayyy cause errors.
 pub fn compile_batch(paths: impl Iterator<Item = PathBuf>, config: &Config) -> Result<()> {
     std::thread::scope(|s| -> Result<()> {
         let mut paths_and_handles = vec![];

@@ -1,7 +1,6 @@
-use std::path::Path;
+use std::{sync::mpsc::Receiver, thread};
 
 use axum::{Router, http};
-use notify_debouncer_full::notify::{self, RecursiveMode, Watcher as _};
 use tower::layer::util::Stack;
 use tower_http::{services::ServeDir, set_header::SetResponseHeaderLayer};
 use tower_livereload::LiveReloadLayer;
@@ -30,17 +29,24 @@ fn no_cache_layer() -> Stack<Srhl, Stack<Srhl, Srhl>> {
     )
 }
 
-pub async fn serve() {
-    if let Err(error) = try_main().await {
+pub async fn serve(reload_rx: Receiver<()>) {
+    if let Err(error) = try_main(reload_rx).await {
         eprintln!("{}", error);
         std::process::exit(1);
     }
 }
 
-async fn try_main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("tried main");
+async fn try_main(reload_rx: Receiver<()>) -> Result<(), Box<dyn std::error::Error>> {
     let livereload = LiveReloadLayer::new();
     let reloader = livereload.reloader();
+
+    // yes, we just use a normal thread instead of tokio shenanigans. meh.
+    thread::spawn(move || {
+        for _reload_request in reload_rx {
+            reloader.reload();
+        }
+    });
+
     let app = Router::new()
         .fallback_service(ServeDir::new(
             "/home/saffron/Documents/projects/compile-typst-site/examples/typst-site-full/_site",
@@ -48,22 +54,10 @@ async fn try_main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(livereload)
         .layer(no_cache_layer());
 
-    let mut watcher = notify::recommended_watcher(move |event: Result<_, _>| {
-        if event.is_ok_and(|evt: notify::Event| !evt.kind.is_access()) {
-            reloader.reload();
-        }
-    })?;
-    watcher.watch(
-        Path::new(
-            "/home/saffron/Documents/projects/compile-typst-site/examples/typst-site-full/_site",
-        ),
-        RecursiveMode::Recursive,
-    )?;
-
     let addr: std::net::SocketAddr = ([0, 0, 0, 0], 8010).into();
     eprintln!("listening on: http://{}/", addr);
 
-    // tracing_subscriber::fmt::init();
+    // tracing_subscriber::fmt::init(); // uhh apparently someone already called this somewhere?
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;

@@ -16,6 +16,8 @@ struct Args {
     path: Option<String>,
     /// Build and then watch for changes.
     watch: bool,
+    /// Build and then watch for changes while serving website locally.
+    serve: bool,
     /// Ignore initial full-site compilation step.
     ignore_initial: bool,
     /// Enable verbose logging.
@@ -108,6 +110,7 @@ impl TryFrom<String> for FileListing {
 #[derivative(Debug)]
 pub struct Config {
     pub watch: bool,
+    pub serve: bool,
     pub ignore_initial: bool,
     pub verbose: bool,
     pub trace: bool,
@@ -143,6 +146,7 @@ impl Config {
         let Args {
             path,
             watch,
+            serve,
             ignore_initial,
             verbose,
             trace,
@@ -174,6 +178,7 @@ impl Config {
 
         Ok(Self {
             watch,
+            serve,
             ignore_initial,
             verbose,
             trace,
