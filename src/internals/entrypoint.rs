@@ -15,21 +15,28 @@ pub fn run(config: &Config) -> Result<()> {
 
     log::debug!("loaded configuration: {:#?}", &config);
 
-    use tokio::runtime::Runtime;
-    let rt = Runtime::new()?;
-    rt.spawn(crate::internals::serve::serve());
-    println!("STARTING STUFF");
-    loop {}
-
     if config.ignore_initial {
         log::info!("ignoring initial compile from scratch");
     } else {
         compile::compile_from_scratch(&config)?;
     }
 
-    if !config.watch {
+    if !(config.watch || config.serve) {
         return Ok(());
     }
+
+    // if we drop this runtime, we are in for a bad time. we don't get serving.
+    let rt = tokio::runtime::Runtime::new()?;
+    let reload_tx = if config.serve {
+        println!("SERVING ");
+        let (reload_tx, reload_rx) = mpsc::channel::<()>();
+
+        rt.spawn(crate::internals::serve::serve(reload_rx));
+
+        Some(reload_tx)
+    } else {
+        None
+    };
 
     let (tx, rx) = mpsc::channel::<DebounceEventResult>();
 
@@ -59,11 +66,13 @@ pub fn run(config: &Config) -> Result<()> {
                 for path in &event.event.paths {
                     match CompileOutput::from_full_path(path, config)? {
                         CompileOutput::Noop => (),
-                        _ => {}
+                        _ => {
+                            if let Some(reload_tx) = &reload_tx {
+                                reload_tx.send(())?;
+                            }
+                        }
                     }
                 }
-                // CompileOutput::Noop => (),
-                // CompileOutput::RecompileAll => {
 
                 if event.event.paths.len() == 1 {
                     log::info!("recompiled path: {:?}", event.event.paths[0]);
