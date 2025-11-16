@@ -6,6 +6,9 @@ use notify_debouncer_full::DebounceEventResult;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};
 use std::{sync::mpsc, time::Duration};
 
+#[cfg(not(feature = "serve"))]
+use std::sync::mpsc::Sender;
+
 use crate::internals::compile::{self, CompileOutput};
 use crate::internals::config::Config;
 use crate::internals::logging;
@@ -26,10 +29,13 @@ pub fn run(config: &Config) -> Result<()> {
     }
 
     // if we drop this runtime, we are in for a bad time. we don't get serving.
+    #[cfg(feature = "serve")]
     let rt = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(4)
         .enable_io()
         .build()?;
+
+    #[cfg(feature = "serve")]
     let reload_tx = if config.serve {
         let (reload_tx, reload_rx) = mpsc::channel::<()>();
 
@@ -38,6 +44,16 @@ pub fn run(config: &Config) -> Result<()> {
 
         Some(reload_tx)
     } else {
+        None
+    };
+
+    #[cfg(not(feature = "serve"))]
+    let reload_tx: Option<Sender<()>> = {
+        log::info!(
+            "warning: your version of `compile-typst-site` does not include local site serving, \
+            so we will only watch for changes. \
+            get a fully-featured version at https://wade-cheng.com/compile-typst-site/how-to/installation.html."
+        );
         None
     };
 
@@ -66,13 +82,11 @@ pub fn run(config: &Config) -> Result<()> {
             if let EventKind::Create(_) | EventKind::Modify(_) = event.kind {
                 compile::compile_batch(event.event.paths.clone().into_iter(), &config)?;
 
-                for path in &event.event.paths {
-                    match CompileOutput::from_full_path(path, config)? {
-                        CompileOutput::Noop => (),
-                        _ => {
-                            if let Some(reload_tx) = &reload_tx {
-                                reload_tx.send(())?;
-                            }
+                if let Some(reload_tx) = &reload_tx {
+                    for path in &event.event.paths {
+                        match CompileOutput::from_full_path(path, config)? {
+                            CompileOutput::Noop => (),
+                            _ => reload_tx.send(())?,
                         }
                     }
                 }

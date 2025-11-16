@@ -9,9 +9,6 @@ use tower::layer::util::Stack;
 use tower_http::{services::ServeDir, set_header::SetResponseHeaderLayer};
 use tower_livereload::LiveReloadLayer;
 
-// added crates: tokio
-// axuma xum tower tower_http tower_livereload
-
 // not sure if this no cache stuff is needed, Works On My Machine, but might as well keep it in.
 // I don't notice any terrible performance issues or anything.
 
