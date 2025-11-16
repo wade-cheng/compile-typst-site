@@ -1,6 +1,6 @@
 # compile-typst-site
 
-`compile-typst-site` is a binary utility for static site generation using Typst. It takes a directory structure like this:
+`compile-typst-site` is a command-line program for static site generation using Typst. It takes a directory structure like this:
 
 ```
 .
