@@ -27,7 +27,7 @@ $ compile-typst-site
 You can either simply make changes and recompile on every change, or use
 
 ```
-$ compile-typst-site --watch --ignore-initial
+$ compile-typst-site --serve --ignore-initial
 ```
 
 and then save your changes.
@@ -105,4 +105,4 @@ To add it to the navbar, you will also want to update the base template:
 ]
 ```
 
-Notice that if you updated it while `compile-typst-site --watch --ignore-initial` was running, all three of your files got the new navigation bar link.
+Notice that if you updated it while `compile-typst-site --serve --ignore-initial` was running, all three of your files got the new navigation bar link.

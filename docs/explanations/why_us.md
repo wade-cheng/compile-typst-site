@@ -20,9 +20,7 @@ Since I like simple website stacks for my personal site, I haven't bothered lear
 
 Compiling by hand and `compile-typst-site` don't have methods of local auto-reloading web servers. When your browser opens a plain HTML file, it might not load your CSS if it's linked in a separate file. This is a security feature in browsers, iiuc. This means you have to, e.g., `python -m http.server`, or only view your site after uploading it to Github Pages or Neocities.
 
-Every other serious solution spins up a web server locally (to, for example, <http://localhost:8000/>) and updates it automatically when save your files. With our `http.server`, we have to manually hit refresh.[^2]
-
-[^2]: This feature is on the issue tracker.
+Every solution but manual compilation spins up a web server locally (to, for example, <http://localhost:8000/>) and updates it automatically when save your files.
 
 ## Publishing your site
 
