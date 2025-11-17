@@ -74,8 +74,8 @@ struct ConfigFile {
 ## CLI API
 
 ```text
-compile-typst-site v1.0.0
-Binary tool for static site generation using Typst.
+compile-typst-site v2.0.2
+Command-line program for static site generation using Typst.
 
 Usage:
   compile-typst-site [flags] [options]
