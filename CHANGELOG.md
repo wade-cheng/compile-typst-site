@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- watching (or serving) a project with no templates folder no longer fails.
+
 ## [2.0.1] - 2025-11-16
 
 ### Changed
