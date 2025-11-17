@@ -34,7 +34,8 @@ struct ConfigFile {
     passthrough_copy: Option<Vec<String>>,
     /// Command to run before a full rebuild.
     ///
-    /// $PROJECT_ROOT is replaced with the path to the project root.
+    /// Strings should not contain $ unless the symbol begins:
+    /// - $PROJECT_ROOT, which is replaced with the path to the project root.
     ///
     /// E.g., `passthrough_copy = ["python", "$PROJECT_ROOT/prebuild.py"]`.
     init: Option<Vec<String>>,
@@ -42,7 +43,8 @@ struct ConfigFile {
     ///
     /// Must take in stdin and return via stdout.
     ///
-    /// $PROJECT_ROOT is replaced with the path to the project root.
+    /// Strings should not contain $ unless the symbol begins:
+    /// - $PROJECT_ROOT, which is replaced with the path to the project root.
     ///
     /// Example in the TOML config file: `post_processing_typ = ["python", "$PROJECT_ROOT/post_processing_script.py"]`.
     post_processing_typ: Option<Vec<String>>,
