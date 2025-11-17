@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2025-11-16
+
+### Changed
+
+- fix version in `Cargo.toml` still saying 1.0.0.
+- exclude `tests/integration_test_contents` from cargo publish. For size.
+
 ## [2.0.0] - 2025-11-16
 
 ### Added
