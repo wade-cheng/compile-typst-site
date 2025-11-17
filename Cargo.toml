@@ -2,11 +2,12 @@
 name = "compile-typst-site"
 description = "Binary tool for static site generation using Typst."
 repository = "https://github.com/wade-cheng/compile-typst-site/"
-version = "1.0.0"
+version = "2.0.1"
 edition = "2024"
 license = "MIT"
 exclude = [
     "examples/typst-site-full",  # this uses images, which make the package size much larger
+    "tests/integration_test_contents",  # likewise
 ]
 
 [dependencies]
