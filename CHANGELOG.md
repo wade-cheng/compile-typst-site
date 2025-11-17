@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-11-16
+
 ### Added
 
 - `--path` arg to CLI.
@@ -15,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Replace `$PROJECT_ROOT` with the project root path. This is technically breaking. Maybe I should disallow `$` in those fields?
+- Replace `$PROJECT_ROOT` with the project root path in the `init` and `post_processing_typ` config file fields.
+- Disallow `$` in those fields.
 - Split publically available library code into `stable` and `internal` modules; only stable code follows semver, and internal code is provided for convenience but with no guarantees.
 - Move all library code into `internal` for now.
 
