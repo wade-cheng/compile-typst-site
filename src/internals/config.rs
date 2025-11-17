@@ -126,9 +126,9 @@ pub struct Config {
     pub literal_paths: bool,
     pub file_listing: FileListing,
     pub project_root: PathBuf,
-    pub content_root: PathBuf,
-    pub output_root: PathBuf,
-    pub template_root: PathBuf,
+    pub content_relpath: PathBuf,
+    pub output_relpath: PathBuf,
+    pub template_relpath: PathBuf,
 }
 pub const CONFIG_FNAME: &str = "compile-typst-site.toml";
 
@@ -140,10 +140,22 @@ impl Config {
         })
     }
 
+    pub fn content_root(&self) -> PathBuf {
+        self.project_root.join(&self.content_relpath)
+    }
+
+    pub fn output_root(&self) -> PathBuf {
+        self.project_root.join(&self.output_relpath)
+    }
+
+    pub fn template_root(&self) -> PathBuf {
+        self.project_root.join(&self.template_relpath)
+    }
+
     fn new_inner() -> Result<Self> {
-        let content_root = PathBuf::from("src");
-        let output_root = PathBuf::from("_site");
-        let template_root = PathBuf::from("templates");
+        let content_relpath = PathBuf::from("src");
+        let output_relpath = PathBuf::from("_site");
+        let template_relpath = PathBuf::from("templates");
 
         let Args {
             path,
@@ -176,7 +188,7 @@ impl Config {
             .try_into()?;
 
         let (passthrough_copy_globs, passthrough_copy_globs_string_form) =
-            Self::compile_globs(&passthrough_copy, &project_root, &content_root)?;
+            Self::compile_globs(&passthrough_copy, &project_root, &content_relpath)?;
 
         Ok(Self {
             watch,
@@ -192,9 +204,9 @@ impl Config {
             literal_paths,
             file_listing,
             project_root,
-            content_root,
-            output_root,
-            template_root,
+            content_relpath,
+            output_relpath,
+            template_relpath,
         })
     }
 

@@ -19,7 +19,7 @@ use crate::internals::config::{Config, FileListing};
 /// i.e. we walk through the source dir.
 /// Ignores inaccessible such files.
 pub fn source_files(config: &Config) -> impl Iterator<Item = PathBuf> {
-    WalkDir::new(config.project_root.join(&config.content_root))
+    WalkDir::new(config.content_root())
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|entry| entry.metadata().unwrap().is_file())
@@ -46,12 +46,8 @@ impl CompileOutput {
             .iter()
             .any(|glob| glob.matches_path_with(&full_path, MATCH_CFG))
         {
-            let rel_path = full_path
-                .strip_prefix(&config.project_root)?
-                .strip_prefix(&config.content_root)?;
-            let dst_path = PathBuf::from(&config.project_root)
-                .join(&config.output_root)
-                .join(rel_path);
+            let rel_path = full_path.strip_prefix(&config.content_root())?;
+            let dst_path = config.output_root().join(rel_path);
             log::trace!(
                 "CompileOutput::from_full_path({:?}, config) computed Passthrough to {:?}",
                 full_path,
@@ -68,20 +64,15 @@ impl CompileOutput {
             return Ok(Self::Noop);
         }
 
-        if let Ok(_) = full_path.strip_prefix(config.project_root.join(&config.template_root)) {
+        if let Ok(_) = full_path.strip_prefix(config.template_root()) {
             log::trace!(
                 "CompileOutput::from_full_path({:?}, config) computed RecompileAll",
                 full_path
             );
             return Ok(Self::RecompileAll);
-        } else if let Ok(path_to_typ_in_src) =
-            full_path.strip_prefix(config.project_root.join(&config.content_root))
-        {
+        } else if let Ok(path_to_typ_in_src) = full_path.strip_prefix(config.content_root()) {
             let rel_parent = path_to_typ_in_src.parent().context("Found no parent.")?;
-            let parent_dir_in_dst = config
-                .project_root
-                .join(&config.output_root)
-                .join(rel_parent);
+            let parent_dir_in_dst = config.output_root().join(rel_parent);
             let file_in_dst = if full_path.file_name().context("Found no file name")? == "index.typ"
                 || config.literal_paths
             {
