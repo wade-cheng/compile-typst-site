@@ -154,7 +154,7 @@ fn medium_succeeds() {
 /// Should be a real stress test.
 #[test]
 fn wade_mirror_succeeds() {
-    let (_, output) = IntegrationTest::new("wade-mirror").run().unwrap();
+    let (_, output) = IntegrationTest::new("wade_mirror").run().unwrap();
 
     println!("stdout: {}", String::from_utf8(output.stdout).unwrap());
     println!("stderr: {}", String::from_utf8(output.stderr).unwrap());
