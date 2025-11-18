@@ -1,0 +1,9 @@
+passthrough_copy = [
+    "*.css",
+    "*.png",
+    "assets/**/*",
+    "favicon/*",
+    ".nojekyll",
+    "CNAME",
+    "404.html",
+]
