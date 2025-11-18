@@ -14,3 +14,6 @@ install-locally:
 doc:
     uv pip install -r docs/requirements.txt
     uv run sphinx-autobuild docs docs_out
+
+test-all:
+    cargo test --all-features -- --include-ignored 

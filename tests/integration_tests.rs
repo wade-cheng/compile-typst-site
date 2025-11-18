@@ -161,3 +161,14 @@ fn wade_mirror_succeeds() {
 
     assert!(output.status.success());
 }
+
+#[test]
+#[ignore = "100MB of stress test"]
+fn can_read_and_post_process_lengthy_content() {
+    let (_, output) = IntegrationTest::new("read_lengthy_content").run().unwrap();
+
+    println!("stdout: {}", String::from_utf8(output.stdout).unwrap());
+    println!("stderr: {}", String::from_utf8(output.stderr).unwrap());
+
+    assert!(output.status.success());
+}
