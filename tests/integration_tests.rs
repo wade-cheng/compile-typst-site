@@ -2,6 +2,7 @@ mod util;
 use std::{env, fs, io};
 
 use compile_typst_site::internals::config::CONFIG_FNAME;
+use walkdir::WalkDir;
 
 use crate::util::IntegrationTest;
 
@@ -83,21 +84,50 @@ fn just_populated_templates_does_nothing() {
 }
 
 #[test]
-fn simple_test_succeeds() {
-    let (_, output) = IntegrationTest::new("simple").run().unwrap();
+fn passthrough_copies_correctly() {
+    let (project_root, output) = IntegrationTest::new("passthrough_copy").run().unwrap();
+    let output_root = project_root.join("_site");
+
+    let mut files: Vec<String> = WalkDir::new(&output_root)
+        .into_iter()
+        .map(|dir_entry| dir_entry.unwrap())
+        .filter(|dir_entry| dir_entry.metadata().unwrap().is_file())
+        .map(|dir_entry| {
+            dir_entry
+                .into_path()
+                .strip_prefix(&output_root)
+                .unwrap()
+                .to_string_lossy()
+                .to_string()
+        })
+        .collect();
+    files.sort();
+
+    println!("{:#?}", files);
+
+    assert_eq!(
+        files,
+        [
+            ".nojekyll",
+            "404.html",
+            "CNAME",
+            "assets/1",
+            "assets/2",
+            "assets/subassets/10",
+            "assets/subassets/20",
+            "favicon/1",
+            "favicon/2",
+            "x.png",
+            "y.css",
+        ]
+    );
 
     assert!(output.status.success());
 }
 
-/// This one's roughly a mirror of my personal site from 2025-11-15.
-///
-/// Should be a real stress test.
 #[test]
-fn wade_mirror_succeeds() {
-    let (_, output) = IntegrationTest::new("wade-mirror").run().unwrap();
-
-    println!("stdout: {}", String::from_utf8(output.stdout).unwrap());
-    println!("stderr: {}", String::from_utf8(output.stderr).unwrap());
+fn simple_test_succeeds() {
+    let (_, output) = IntegrationTest::new("simple").run().unwrap();
 
     assert!(output.status.success());
 }
@@ -112,6 +142,19 @@ fn medium_succeeds() {
     let (_, output) = IntegrationTest::new("hardcoded_links_example")
         .run()
         .unwrap();
+
+    println!("stdout: {}", String::from_utf8(output.stdout).unwrap());
+    println!("stderr: {}", String::from_utf8(output.stderr).unwrap());
+
+    assert!(output.status.success());
+}
+
+/// This one's roughly a mirror of my personal site from 2025-11-15.
+///
+/// Should be a real stress test.
+#[test]
+fn wade_mirror_succeeds() {
+    let (_, output) = IntegrationTest::new("wade-mirror").run().unwrap();
 
     println!("stdout: {}", String::from_utf8(output.stdout).unwrap());
     println!("stderr: {}", String::from_utf8(output.stderr).unwrap());
