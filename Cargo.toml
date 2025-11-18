@@ -2,7 +2,7 @@
 name = "compile-typst-site"
 description = "Command-line program for static site generation using Typst."
 repository = "https://github.com/wade-cheng/compile-typst-site/"
-version = "2.0.2"
+version = "2.0.3"
 edition = "2024"
 license = "MIT"
 exclude = [
