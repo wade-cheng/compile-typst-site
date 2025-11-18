@@ -10,5 +10,5 @@ jobs:
       - uses: cargo-bins/cargo-binstall@v1.15.10
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo binstall --no-confirm typst-cli
-      - run: cargo build
+      - run: cargo build --all-features
       - run: cargo test --all-features -- --include-ignored
