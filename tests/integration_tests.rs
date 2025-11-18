@@ -126,6 +126,13 @@ fn passthrough_copies_correctly() {
 }
 
 #[test]
+fn failing_compile_fails() {
+    let (_, output) = IntegrationTest::new("failing_doc").run().unwrap();
+
+    assert!(!output.status.success());
+}
+
+#[test]
 fn simple_test_succeeds() {
     let (_, output) = IntegrationTest::new("simple").run().unwrap();
 
