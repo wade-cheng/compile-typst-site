@@ -18,10 +18,10 @@ That is, just like `cargo`, `just`, `uv`, and so on, you can use `compile-typst-
 
 The directory `.` (one that contains a `compile-typst-site.toml` file) is known as the "project root."
 
-When you do so, it looks at every file in `src`. For each such file, one of the following happens:
+When you do so, it looks at every file in `src`. For each such file, one of the following happens, checked in the following order:
 
+- Files matching those in the `passthrough_copy` array in `compile-typst-site.toml` are copied over. Matching can use globs. Files are rooted in the content `src` directory, not the project root.
 - Typst files are compiled by calling your local Typst CLI; we expect one to be installed.
-- Files matching those in the `passthrough_copy` array in `compile-typst-site.toml` are copied over. Matching can use globs, processed with the `globset` crate. This is probably unidiomatic to file paths (`*` matches recursively instead of just the first layer).
 - Other files are ignored.
 
 If file watching is turned on, changes in `src` will only recompile that file. Changes in `templates` will recompile the entire project (all of `src`). We aren't smart enough to detect exactly which dependents to recompile.
