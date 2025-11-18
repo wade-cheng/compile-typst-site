@@ -1,5 +1,0 @@
-passthrough_copy = [
-    "7.png",
-]
-post_processing_typ = ['python', 'post-process.py']
-init = ["bash", "-c","yes \"repeat this message\n\n\" | head -c 100MB - > src/yes.txt"]

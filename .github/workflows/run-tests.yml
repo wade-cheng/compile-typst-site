@@ -11,4 +11,4 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo binstall --no-confirm typst-cli
       - run: cargo build
-      - run: cargo test --all-features
+      - run: cargo test --all-features -- --include-ignored
