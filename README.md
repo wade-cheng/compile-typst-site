@@ -3,7 +3,6 @@
 `compile-typst-site` is a command-line program for static site generation using Typst. It takes a directory structure like this:
 
 ```
-$ tree
 .
 ├── compile-typst-site.toml
 ├── src/
@@ -21,15 +20,10 @@ $ tree
     └── base.typ
 ```
 
-and generates a `_site` like this:
+and after running `compile-typst-site` in the directory, it generates a `_site` like this:
 
 ```
-$ compile-typst-site
-INFO  [compile_typst_site] compiled project from scratch
-
-$ tree
 .
-├── compile-typst-site.toml
 ├── _site/
 │   ├── about/
 │   │   └── index.html
@@ -44,10 +38,7 @@ $ tree
 │   │   └── ...
 │   ├── index.html
 │   └── style.css
-├── src/
-│   └── ...
-└── templates/
-    └── ...
+└── ...
 ```
 
 For more, visit the docs: <https://wade-cheng.com/compile-typst-site/>.
