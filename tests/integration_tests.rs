@@ -1,5 +1,5 @@
 mod util;
-use std::{env, fs, io};
+use std::{env, fs, io, path::PathBuf};
 
 use compile_typst_site::internals::config::CONFIG_FNAME;
 use walkdir::WalkDir;
@@ -88,7 +88,7 @@ fn passthrough_copies_correctly() {
     let (project_root, output) = IntegrationTest::new("passthrough_copy").run().unwrap();
     let output_root = project_root.join("_site");
 
-    let mut files: Vec<String> = WalkDir::new(&output_root)
+    let mut files: Vec<PathBuf> = WalkDir::new(&output_root)
         .into_iter()
         .map(|dir_entry| dir_entry.unwrap())
         .filter(|dir_entry| dir_entry.metadata().unwrap().is_file())
@@ -97,8 +97,7 @@ fn passthrough_copies_correctly() {
                 .into_path()
                 .strip_prefix(&output_root)
                 .unwrap()
-                .to_string_lossy()
-                .to_string()
+                .to_path_buf()
         })
         .collect();
     files.sort();
@@ -108,17 +107,17 @@ fn passthrough_copies_correctly() {
     assert_eq!(
         files,
         [
-            ".nojekyll",
-            "404.html",
-            "CNAME",
-            "assets/1",
-            "assets/2",
-            "assets/subassets/10",
-            "assets/subassets/20",
-            "favicon/1",
-            "favicon/2",
-            "x.png",
-            "y.css",
+            [".nojekyll"].iter().collect::<PathBuf>(),
+            ["404.html"].iter().collect::<PathBuf>(),
+            ["CNAME"].iter().collect::<PathBuf>(),
+            ["assets", "1"].iter().collect::<PathBuf>(),
+            ["assets", "2"].iter().collect::<PathBuf>(),
+            ["assets", "subassets", "10"].iter().collect::<PathBuf>(),
+            ["assets", "subassets", "20"].iter().collect::<PathBuf>(),
+            ["favicon", "1"].iter().collect::<PathBuf>(),
+            ["favicon", "2"].iter().collect::<PathBuf>(),
+            ["x.png"].iter().collect::<PathBuf>(),
+            ["y.css"].iter().collect::<PathBuf>(),
         ]
     );
 

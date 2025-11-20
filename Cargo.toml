@@ -15,6 +15,7 @@ anyhow = "1.0.100"
 axum = { version = "0.8.7", optional = true }
 derivative = "2.2.0"
 glob = "0.3.3"
+json = "0.12.4"
 log = "0.4.28"
 notify-debouncer-full = "0.6.0"
 onlyargs = "0.2.0"
