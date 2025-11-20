@@ -14,4 +14,4 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo binstall --no-confirm typst-cli
       - run: cargo build --all-features
-      - run: cargo test --all-features -- --include-ignored
+      - run: cargo test --all-features # don't run 100MB test because yes isn't on windows/mac or something
