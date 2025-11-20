@@ -1,4 +1,4 @@
-name: Run test suite
+name: cargo test
 on: [pull_request]
 
 jobs:
