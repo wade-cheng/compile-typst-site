@@ -2,6 +2,7 @@
 
 use anyhow::{Context, Result, anyhow};
 use glob::MatchOptions;
+use json::JsonValue;
 use std::ffi::OsStr;
 use std::fs;
 use std::io::Read;
@@ -108,10 +109,9 @@ impl CompileOutput {
 ///   - empty if not IncludeData
 ///   - otherwise, returned from querying the file for the <data> tag of the Typst file
 pub fn files_as_json(config: &Config) -> Result<String> {
-    // time to hand-write json :-)
-    let mut json_buffer = String::from("{");
+    let mut json = JsonValue::new_object();
 
-    let (tx, rx) = mpsc::channel::<String>();
+    let (tx, rx) = mpsc::channel::<(String, JsonValue)>();
 
     let source_files: Vec<PathBuf> = source_files(&config).collect();
     let num_messages = source_files.len();
@@ -121,8 +121,10 @@ pub fn files_as_json(config: &Config) -> Result<String> {
             let tx = tx.clone();
 
             s.spawn(move || -> Result<()> {
-                let key = file.to_string_lossy();
-                let value = if let (FileListing::IncludeData, CompileOutput::CompileToPath(_)) = (
+                let key = file.to_string_lossy().to_string();
+                let mut value = JsonValue::new_array();
+
+                if let (FileListing::IncludeData, CompileOutput::CompileToPath(_)) = (
                     &config.file_listing,
                     CompileOutput::from_full_path(&file, &config)?,
                 ) {
@@ -146,21 +148,13 @@ pub fn files_as_json(config: &Config) -> Result<String> {
                         ))?;
 
                     if query_output.status.success() {
-                        let mut query_json = String::from_utf8(query_output.stdout)?;
-                        if query_json.pop().ok_or(anyhow!("no final char?"))? != '\n' {
-                            return Err(anyhow!("final char was not \n"));
-                        }
-                        query_json
+                        value = json::parse(str::from_utf8(&query_output.stdout)?)?;
                     } else {
-                        "[]".to_string()
+                        log::info!("failed to query {}", &file.to_string_lossy());
                     }
-                } else {
-                    "[]".to_string()
-                };
+                }
 
-                let entry = format!("\"{key}\": {value},");
-
-                tx.send(entry)?;
+                tx.send((key, value))?;
 
                 Ok(())
             });
@@ -170,16 +164,11 @@ pub fn files_as_json(config: &Config) -> Result<String> {
     })?;
 
     for _ in 0..num_messages {
-        json_buffer.push_str(&rx.recv()?);
+        let (key, value) = rx.recv()?;
+        json[key] = value;
     }
 
-    // remove trailing comma
-    assert_eq!(json_buffer.pop(), Some(','));
-
-    // cap it all off
-    json_buffer.push('}');
-
-    Ok(json_buffer)
+    Ok(json.dump())
 }
 
 pub fn compile_from_scratch(config: &Config) -> Result<()> {
