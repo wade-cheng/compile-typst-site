@@ -5,6 +5,7 @@ default:
 release tag:
     git tag v{{tag}}
     git push --tags
+    cargo publish
 
 # `dist init` can be helpful.
 
