@@ -74,6 +74,8 @@ pub fn run(config: &Config) -> Result<()> {
 
         for event in events {
             if let EventKind::Create(_) | EventKind::Modify(_) = event.kind {
+                let file_created = matches!(event.kind, EventKind::Create(_));
+
                 let relevant_paths: Vec<PathBuf> = event
                     .event
                     .paths
@@ -88,13 +90,20 @@ pub fn run(config: &Config) -> Result<()> {
                     continue;
                 }
 
-                compile::compile_batch(relevant_paths.clone().into_iter(), &config)?;
+                if file_created {
+                    compile::compile_from_scratch(&config)?;
+                    if let Some(reload_tx) = &reload_tx {
+                        reload_tx.send(())?;
+                    }
+                } else {
+                    compile::compile_batch(relevant_paths.clone().into_iter(), &config)?;
 
-                if let Some(reload_tx) = &reload_tx {
-                    for path in &relevant_paths {
-                        match CompileOutput::from_full_path(path, config)? {
-                            CompileOutput::Noop => (),
-                            _ => reload_tx.send(())?,
+                    if let Some(reload_tx) = &reload_tx {
+                        for path in &relevant_paths {
+                            match CompileOutput::from_full_path(path, config)? {
+                                CompileOutput::Noop => (),
+                                _ => reload_tx.send(())?,
+                            }
                         }
                     }
                 }
