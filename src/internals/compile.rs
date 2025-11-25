@@ -138,13 +138,17 @@ pub fn files_as_json(config: &Config) -> Result<String> {
                         OsStr::new(&config.project_root),
                     ];
 
-                    let query_output =
-                        Command::new("typst").args(args).output().context(anyhow!(
+                    let query_output = Command::new("typst")
+                        .args(args)
+                        .args(&config.compilation_extra_args)
+                        .output()
+                        .context(anyhow!(
                             "Failed to query <data> in the file {}. \
                             Maybe you don't have Typst installed? \
-                            We ran `typst` with args: {:?}",
+                            We ran `typst` with args, extra args: {:?} {:?}",
                             &file.to_string_lossy(),
-                            args
+                            args,
+                            &config.compilation_extra_args
                         ))?;
 
                     if query_output.status.success() {
@@ -257,13 +261,15 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
                 ];
                 log::trace!("compile_single:t11");
                 log::trace!(
-                    "compile_single:path {:?}, trying to run typst with args: {:?}",
+                    "compile_single:path {:?}, trying to run typst with args, extra args: {:?} {:?}",
                     &path,
-                    args
+                    args,
+                    &config.compilation_extra_args
                 );
 
                 Command::new("typst")
                     .args(args)
+                    .args(&config.compilation_extra_args)
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
                     .spawn()
@@ -271,8 +277,9 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
                         "Failed to run Typst compiler. \
                         Maybe you don't have it installed? \
                         https://typst.app/open-source/#download \
-                        We ran `typst` with args: {:?}",
-                        args
+                        We ran `typst` with args, extra args: {:?} {:?}",
+                        args,
+                        &config.compilation_extra_args
                     ))?
             };
 

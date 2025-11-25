@@ -2,3 +2,4 @@ passthrough_copy = [
     "style.css",
     "*.png",
 ]
+compilation_extra_args = ["--ignore-system-fonts"]
