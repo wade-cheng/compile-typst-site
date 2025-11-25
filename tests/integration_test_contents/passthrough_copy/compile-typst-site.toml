@@ -7,3 +7,4 @@ passthrough_copy = [
     "CNAME",
     "404.html",
 ]
+compilation_extra_args = ["--ignore-system-fonts"]

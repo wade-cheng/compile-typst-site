@@ -1,0 +1,1 @@
+compilation_extra_args = ["--ignore-system-fonts"]

@@ -1,2 +1,3 @@
 post_processing_typ = ['python', '$PROJECT_ROOT/post-process.py']
-init = ["bash", "-c","yes \"repeat this message\n\n\" | head -c 100MB - > tests/integration_test_contents/read_lengthy_content/src/yes.txt"]
+init = ["bash", "-c","yes | head -c 100MB - > $PROJECT_ROOT/src/yes.txt"]
+compilation_extra_args = ["--ignore-system-fonts"]

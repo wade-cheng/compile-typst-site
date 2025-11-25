@@ -64,6 +64,22 @@ struct ConfigFile {
     ///
     /// Example in the TOML config file: `file_listing = "enabled"`
     file_listing: Option<String>,
+    /// Add extra arguments to the underlying file listing `typst query` invokation.
+    ///
+    /// This can be helpful for ignoring system fonts when querying,
+    /// which can drastically speed up Typst querying
+    /// (until Typst releases https://github.com/typst/typst/pull/7380).
+    ///
+    /// Example in the TOML config file: `file_listing_extra_args = ["--ignore-system-fonts"]`
+    file_listing_extra_args: Option<Vec<String>>,
+    /// Add extra arguments to the underlying `typst compile` invokation.
+    ///
+    /// This can be helpful for ignoring system fonts when compiling,
+    /// which can drastically speed up Typst querying
+    /// (until Typst releases https://github.com/typst/typst/pull/7380).
+    ///
+    /// Example in the TOML config file: `compilation_extra_args = ["--ignore-system-fonts"]`
+    compilation_extra_args: Option<Vec<String>>,
 }
 
 #[derive(Debug)]
@@ -125,6 +141,8 @@ pub struct Config {
     pub post_processing_typ: Vec<String>,
     pub literal_paths: bool,
     pub file_listing: FileListing,
+    pub file_listing_extra_args: Vec<String>,
+    pub compilation_extra_args: Vec<String>,
     pub project_root: PathBuf,
     pub content_relpath: PathBuf,
     pub output_relpath: PathBuf,
@@ -178,14 +196,18 @@ impl Config {
             post_processing_typ,
             literal_paths,
             file_listing,
+            file_listing_extra_args,
+            compilation_extra_args,
         } = Self::get_configfile(&project_root)?;
-        let passthrough_copy = passthrough_copy.unwrap_or(vec![]);
-        let init = init.unwrap_or(vec![]);
-        let post_processing_typ = post_processing_typ.unwrap_or(vec![]);
-        let literal_paths = literal_paths.unwrap_or(false);
+        let passthrough_copy = passthrough_copy.unwrap_or_default();
+        let init = init.unwrap_or_default();
+        let post_processing_typ = post_processing_typ.unwrap_or_default();
+        let literal_paths = literal_paths.unwrap_or_default();
         let file_listing = file_listing
             .unwrap_or(FileListing::DEFAULT_STR.into())
             .try_into()?;
+        let file_listing_extra_args = file_listing_extra_args.unwrap_or_default();
+        let compilation_extra_args = compilation_extra_args.unwrap_or_default();
 
         let (passthrough_copy_globs, passthrough_copy_globs_string_form) =
             Self::compile_globs(&passthrough_copy, &project_root, &content_relpath)?;
@@ -203,6 +225,8 @@ impl Config {
             post_processing_typ,
             literal_paths,
             file_listing,
+            file_listing_extra_args,
+            compilation_extra_args,
             project_root,
             content_relpath,
             output_relpath,
