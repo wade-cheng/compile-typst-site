@@ -8,7 +8,6 @@ passthrough_copy = [
     "404.html",
 ]
 post_processing_typ = ["python", "$PROJECT_ROOT/scripts/post-process.py"]
-# post_processing_typ = ["python", "$PROJECT_ROOT/scripts/post-process.py"]
 file_listing = "include-data"
 file_listing_extra_args = ["--ignore-system-fonts"]
 compilation_extra_args = ["--ignore-system-fonts"]
