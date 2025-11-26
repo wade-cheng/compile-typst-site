@@ -1,10 +1,10 @@
 //! `compile-typst-site` project configuration, pulling from command-line arguments and a config file.
 
 use anyhow::{Context, Result, anyhow};
-use derivative::Derivative;
-use glob::Pattern;
+use glob::{MatchOptions, Pattern};
 use onlyargs_derive::OnlyArgs;
 use serde::Deserialize;
+use std::fmt::Debug;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -121,11 +121,33 @@ impl TryFrom<String> for FileListing {
     }
 }
 
+pub struct PassthroughCopyGlobs(Vec<Pattern>);
+
+impl PassthroughCopyGlobs {
+    const MATCH_CFG: MatchOptions = MatchOptions {
+        case_sensitive: true,
+        require_literal_separator: true,
+        require_literal_leading_dot: false,
+    };
+
+    pub fn matches_path_with(&self, path: &Path) -> bool {
+        self.0
+            .iter()
+            .any(|glob| glob.matches_path_with(&path, Self::MATCH_CFG))
+    }
+}
+
+/// Ignore the gnarly debug impl for `Pattern`.
+impl Debug for PassthroughCopyGlobs {
+    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Ok(())
+    }
+}
+
 /// Full config after taking in command line arguments, a configuration file, and other post-computations.
 ///
 /// See [`Args`] and [`ConfigFile`] for documentation of fields.
-#[derive(Derivative)]
-#[derivative(Debug)]
+#[derive(Debug)]
 pub struct Config {
     pub watch: bool,
     pub serve: bool,
@@ -133,8 +155,8 @@ pub struct Config {
     pub verbose: bool,
     pub trace: bool,
     pub passthrough_copy: Vec<String>,
-    #[derivative(Debug = "ignore")]
-    pub passthrough_copy_globs: Vec<Pattern>,
+    // #[derivative(Debug = "ignore")]
+    pub passthrough_copy_globs: PassthroughCopyGlobs,
     // Pattern has gnarly debug impl; emit a String version instead.
     pub passthrough_copy_globs_string_form: Vec<String>,
     pub init: Vec<String>,
@@ -256,7 +278,7 @@ impl Config {
         string_globs: &[String],
         project_root: &Path,
         content_root: &Path,
-    ) -> Result<(Vec<Pattern>, Vec<String>)> {
+    ) -> Result<(PassthroughCopyGlobs, Vec<String>)> {
         let mut compiled_globs = Vec::new();
         let mut compiled_globs_string_form = Vec::new();
 
@@ -272,6 +294,9 @@ impl Config {
             compiled_globs.push(compiled_glob);
             compiled_globs_string_form.push(string_glob);
         }
+
+        let compiled_globs = PassthroughCopyGlobs(compiled_globs);
+
         Ok((compiled_globs, compiled_globs_string_form))
     }
 
