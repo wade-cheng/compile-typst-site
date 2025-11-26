@@ -5,10 +5,8 @@ use notify_debouncer_full;
 use notify_debouncer_full::DebounceEventResult;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};
 use std::path::PathBuf;
+use std::thread;
 use std::{sync::mpsc, time::Duration};
-
-#[cfg(not(feature = "serve"))]
-use std::sync::mpsc::Sender;
 
 use crate::internals::compile::{self, CompileOutput};
 use crate::internals::config::Config;
@@ -29,32 +27,14 @@ pub fn run(config: &Config) -> Result<()> {
         return Ok(());
     }
 
-    // if we drop this runtime, we are in for a bad time. we don't get serving.
-    #[cfg(feature = "serve")]
-    let rt = tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(4)
-        .enable_io()
-        .build()?;
-
-    #[cfg(feature = "serve")]
     let reload_tx = if config.serve {
         let (reload_tx, reload_rx) = mpsc::channel::<()>();
 
         let path_to_site = config.output_root();
-        rt.spawn(crate::internals::serve::serve(reload_rx, path_to_site));
+        thread::spawn(|| crate::internals::serve::serve(reload_rx, path_to_site));
 
         Some(reload_tx)
     } else {
-        None
-    };
-
-    #[cfg(not(feature = "serve"))]
-    let reload_tx: Option<Sender<()>> = {
-        log::info!(
-            "warning: your version of `compile-typst-site` does not include local site serving, \
-            so we will only watch for changes. \
-            get a fully-featured version at https://wade-cheng.com/compile-typst-site/how-to/installation.html."
-        );
         None
     };
 

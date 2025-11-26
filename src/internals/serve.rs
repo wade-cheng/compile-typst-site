@@ -1,67 +1,28 @@
 // Code is adapted from MIT-licensed https://github.com/leotaku/tower-livereload/tree/master/examples/livehttpd.
 
-use std::{io::ErrorKind, net::SocketAddr, path::PathBuf, sync::mpsc::Receiver, thread};
+use std::{
+    io::{BufRead, BufReader, ErrorKind, Write},
+    net::{SocketAddr, TcpListener, TcpStream},
+    path::PathBuf,
+    sync::{Arc, Mutex, mpsc::Receiver},
+    thread,
+};
 
 use anyhow::{Result, anyhow};
-use axum::{Router, http};
-use tokio::net::TcpListener;
-use tower::layer::util::Stack;
-use tower_http::{services::ServeDir, set_header::SetResponseHeaderLayer};
-use tower_livereload::LiveReloadLayer;
 
-// not sure if this no cache stuff is needed, Works On My Machine, but might as well keep it in.
-// I don't notice any terrible performance issues or anything.
-
-type Srhl = SetResponseHeaderLayer<http::HeaderValue>;
-
-fn no_cache_layer() -> Stack<Srhl, Stack<Srhl, Srhl>> {
-    Stack::new(
-        SetResponseHeaderLayer::overriding(
-            http::header::CACHE_CONTROL,
-            http::HeaderValue::from_static("no-cache, no-store, must-revalidate"),
-        ),
-        Stack::new(
-            SetResponseHeaderLayer::overriding(
-                http::header::PRAGMA,
-                http::HeaderValue::from_static("no-cache"),
-            ),
-            SetResponseHeaderLayer::overriding(
-                http::header::EXPIRES,
-                http::HeaderValue::from_static("0"),
-            ),
-        ),
-    )
+fn handle_connection(stream: TcpStream) -> Result<()> {
+    let buf_reader = BufReader::new(&stream);
+    let request_line = buf_reader.lines().next().unwrap_or(Ok("".into()))?;
+    Ok(())
 }
 
-pub async fn serve(reload_rx: Receiver<()>, path: PathBuf) {
-    if let Err(error) = try_serve(reload_rx, path).await {
-        eprintln!("{:?}", error);
-        std::process::exit(1);
-    }
-}
-
-async fn try_serve(reload_rx: Receiver<()>, path: PathBuf) -> Result<()> {
-    let livereload = LiveReloadLayer::new();
-    let reloader = livereload.reloader();
-
-    // yes, we just use a normal thread instead of tokio shenanigans. meh.
-    thread::spawn(move || {
-        for _reload_request in reload_rx {
-            reloader.reload();
-        }
-    });
-
-    let app = Router::new()
-        .fallback_service(ServeDir::new(path))
-        .layer(livereload)
-        .layer(no_cache_layer());
-
+fn bind() -> Result<TcpListener> {
     let mut listener: Option<TcpListener> = None;
     let mut addr: Option<SocketAddr> = None;
     let ports = 8000..8050;
     for port in ports.clone() {
         let candidate_addr: std::net::SocketAddr = ([0, 0, 0, 0], port).into();
-        match tokio::net::TcpListener::bind(candidate_addr).await {
+        match TcpListener::bind(candidate_addr) {
             Ok(candidate_listener) => {
                 listener = Some(candidate_listener);
                 addr = Some(candidate_addr);
@@ -86,9 +47,29 @@ async fn try_serve(reload_rx: Receiver<()>, path: PathBuf) -> Result<()> {
 
     log::info!("serving your website locally at the link: http://{}/", addr);
 
-    // tracing_subscriber::fmt::init(); // uhh apparently someone already called this somewhere?
+    Ok(listener)
+}
 
-    axum::serve(listener, app).await?;
+pub fn serve(reload_rx: Receiver<()>, path: PathBuf) -> Result<()> {
+    let hot_reload_clients: Arc<Mutex<Vec<TcpStream>>> = Arc::new(Mutex::new(vec![]));
+
+    let hrc = hot_reload_clients.clone();
+    thread::spawn(move || {
+        for _reload_request in reload_rx {
+            hrc.lock().unwrap().retain(|mut tcp_stream| {
+                tcp_stream.write_all(b"data: reload\r\n\r\n").unwrap();
+                true
+            });
+        }
+    });
+
+    let listener = bind()?;
+
+    for stream in listener.incoming() {
+        let stream = stream.unwrap();
+
+        handle_connection(stream)?;
+    }
 
     Ok(())
 }
