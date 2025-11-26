@@ -1,7 +1,6 @@
 //! Compile Typst to HTML given paths and a [`crate::config::Config`].
 
 use anyhow::{Context, Result, anyhow};
-use glob::MatchOptions;
 use json::JsonValue;
 use std::ffi::OsStr;
 use std::fs;
@@ -34,19 +33,9 @@ pub enum CompileOutput {
     CompileToPath(PathBuf),
 }
 
-const MATCH_CFG: MatchOptions = MatchOptions {
-    case_sensitive: true,
-    require_literal_separator: true,
-    require_literal_leading_dot: false,
-};
-
 impl CompileOutput {
     pub fn from_full_path(full_path: &Path, config: &Config) -> Result<Self> {
-        if config
-            .passthrough_copy_globs
-            .iter()
-            .any(|glob| glob.matches_path_with(&full_path, MATCH_CFG))
-        {
+        if config.passthrough_copy_globs.matches_path_with(&full_path) {
             let rel_path = full_path.strip_prefix(&config.content_root())?;
             let dst_path = config.output_root().join(rel_path);
             log::trace!(
