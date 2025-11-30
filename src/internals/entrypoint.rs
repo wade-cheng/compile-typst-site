@@ -1,10 +1,11 @@
 //! The function to call to kick off the binary.
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use notify_debouncer_full;
 use notify_debouncer_full::DebounceEventResult;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};
 use std::path::PathBuf;
+use std::process::Command;
 use std::thread;
 use std::{sync::mpsc, time::Duration};
 
@@ -14,6 +15,13 @@ use crate::internals::logging;
 
 pub fn run(config: &Config) -> Result<()> {
     logging::init(&config);
+
+    if Command::new("typst").status().is_err() {
+        return Err(anyhow!(
+            "Typst doesn't seem to be installed on your computer. \
+            See https://typst.app/open-source/#download"
+        ));
+    }
 
     log::debug!("loaded configuration: {:#?}", &config);
 
