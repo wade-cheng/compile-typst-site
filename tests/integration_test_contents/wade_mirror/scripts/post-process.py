@@ -34,4 +34,8 @@ if endnotes_match:
         replaced,
     )
 
+sys.stderr.buffer.write(
+    b"PRINTING THIS TO STDERR FOR TESTING PURPOSES. NO NEED FOR CONCERN."
+)
+
 sys.stdout.buffer.write(replaced.encode("utf-8"))
