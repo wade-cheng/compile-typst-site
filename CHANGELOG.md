@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0-rc2] - 2025-11-30
+
+### Changed
+
+- Add a `rust-toolchain.toml` to try to fix `dist` for `aarch64-pc-windows-msvc`. See commit message for verbose details.
+
 ## [2.1.0-rc1] - 2025-11-30
 
 ### Fixed
