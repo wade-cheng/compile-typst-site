@@ -135,6 +135,7 @@ pub fn files_as_json(config: &Config) -> Result<String> {
                         .context(anyhow!(
                             "Failed to query <data> in the file {}. \
                             Maybe you don't have Typst installed? \
+                            https://typst.app/open-source/#download \
                             We ran `typst` with args, extra args: {:?} {:?}",
                             &file.to_string_lossy(),
                             args,
