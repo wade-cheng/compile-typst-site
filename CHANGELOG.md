@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `file_listing_extra_args`, `compilation_extra_args` to config file
+
 ### Changed
 
 - Docs landing page/README.md parity.
+- Recompile from scratch when a file is created.
+- Clean up dependencies (see https://wade-cheng.com/blog/optimizing-compile-times/).
 
 ### Fixed
 
