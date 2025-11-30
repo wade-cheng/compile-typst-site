@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - More paths compatible with windows. `file_listing` should work on windows now.
+- Not having `typst` installed should no longer hang at, e.g., the generating and writing file listing step.
 
 ## [2.0.3] - 2025-11-18
 
