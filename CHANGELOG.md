@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docs landing page/README.md parity.
 - Recompile from scratch when a file is created.
 - Clean up dependencies (see https://wade-cheng.com/blog/optimizing-compile-times/).
+- Supply test suite Typst via `actions/setup-typst` instead of `cargo binstall`
+  - `binstall` is sometimes forced to compile from scratch. Hm.
 
 ### Fixed
 
