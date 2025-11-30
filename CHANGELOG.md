@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clean up dependencies (see https://wade-cheng.com/blog/optimizing-compile-times/).
 - Supply test suite Typst via `actions/setup-typst` instead of `cargo binstall`
   - `binstall` is sometimes forced to compile from scratch. Hm.
+- Give `PassthroughCopyGlobs` config field an output in `-v`
 
 ### Fixed
 
