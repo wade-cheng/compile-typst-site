@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Supply test suite Typst via `actions/setup-typst` instead of `cargo binstall`
   - `binstall` is sometimes forced to compile from scratch. Hm.
 - Give `PassthroughCopyGlobs` config field an output in `-v`
+- Logging changes/improvements
+  - Log all modules, not just from our own binary (start seeing logs from crates e.g. in `-t` verbosity)
+  - Always log sterr instead of only doing so on subprocess error.
+  - Don't crash on ignorable errors while serving. i.e,
+    when serve or watch mode is on, errors are demoted to warnings.
+  - We also no longer join some threads but ehhhhh i'm sure it's fine. I can revisit it.
 
 ### Fixed
 
