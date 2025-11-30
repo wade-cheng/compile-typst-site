@@ -1,6 +1,6 @@
 //! The function to call to kick off the binary.
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use notify_debouncer_full;
 use notify_debouncer_full::DebounceEventResult;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};
@@ -44,13 +44,13 @@ pub fn run(config: &Config) -> Result<()> {
     debouncer.watch(&config.project_root, RecursiveMode::Recursive)?;
 
     for res in rx {
-        let events = res.map_err(|errs| {
+        let events = res.unwrap_or_else(|errs| {
             for err in errs {
-                eprintln!("{:?}", err);
+                log::error!("{:?}", err);
             }
 
-            anyhow!("File watcher received errors.")
-        })?;
+            vec![]
+        });
 
         for event in events {
             if let EventKind::Create(_) | EventKind::Modify(_) = event.kind {
@@ -71,18 +71,22 @@ pub fn run(config: &Config) -> Result<()> {
                 }
 
                 if file_created {
-                    compile::compile_from_scratch(&config)?;
+                    compile::compile_from_scratch(&config)
+                        .unwrap_or_else(|e| log::warn!("{:?}", e));
                     if let Some(reload_tx) = &reload_tx {
                         reload_tx.send(())?;
                     }
                 } else {
-                    compile::compile_batch(relevant_paths.clone().into_iter(), &config)?;
+                    compile::compile_batch(relevant_paths.clone().into_iter(), &config)
+                        .unwrap_or_else(|e| log::warn!("{:?}", e));
 
                     if let Some(reload_tx) = &reload_tx {
                         for path in &relevant_paths {
                             match CompileOutput::from_full_path(path, config)? {
                                 CompileOutput::Noop => (),
-                                _ => reload_tx.send(())?,
+                                _ => reload_tx
+                                    .send(())
+                                    .unwrap_or_else(|e| log::error!("{:?}", e)),
                             }
                         }
                     }
