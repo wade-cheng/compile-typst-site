@@ -10,8 +10,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
-      - uses: cargo-bins/cargo-binstall@v1.15.10
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo binstall --no-confirm typst-cli
-      - run: cargo build --all-features
+      - uses: typst-community/setup-typst@v4
       - run: cargo test --all-features # don't run 100MB test because yes isn't on windows/mac or something
