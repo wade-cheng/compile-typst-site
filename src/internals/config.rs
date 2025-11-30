@@ -140,8 +140,8 @@ impl PassthroughCopyGlobs {
 
 /// Ignore the gnarly debug impl for `Pattern`.
 impl Debug for PassthroughCopyGlobs {
-    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Ok(())
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("omitted for brevity. see below")
     }
 }
 
