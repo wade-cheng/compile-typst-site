@@ -8,7 +8,6 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::mpsc::{self};
-use std::thread::JoinHandle;
 use walkdir::WalkDir;
 
 use crate::internals::config::{Config, FileListing};
@@ -118,6 +117,8 @@ pub fn files_as_json(config: &Config) -> Result<String> {
                     CompileOutput::from_full_path(&file, &config)?,
                 ) {
                     let args = [
+                        OsStr::new("--color"),
+                        OsStr::new("always"),
                         OsStr::new("query"),
                         OsStr::new(&file),
                         OsStr::new("<data>"),
@@ -127,7 +128,7 @@ pub fn files_as_json(config: &Config) -> Result<String> {
                         OsStr::new(&config.project_root),
                     ];
 
-                    let query_output = Command::new("typst")
+                    let mut query_output = Command::new("typst")
                         .args(args)
                         .args(&config.compilation_extra_args)
                         .output()
@@ -139,6 +140,14 @@ pub fn files_as_json(config: &Config) -> Result<String> {
                             args,
                             &config.compilation_extra_args
                         ))?;
+
+                    if !query_output.stderr.is_empty() {
+                        log::warn!(
+                            target: "typst query stderr",
+                            "{}",
+                            String::from_utf8(std::mem::take(&mut query_output.stderr))?
+                        );
+                    }
 
                     if query_output.status.success() {
                         value = json::parse(str::from_utf8(&query_output.stdout)?)?;
@@ -167,15 +176,23 @@ pub fn files_as_json(config: &Config) -> Result<String> {
 pub fn compile_from_scratch(config: &Config) -> Result<()> {
     if config.init.len() > 0 {
         log::info!("running init command");
-        let exit_status = Command::new(&config.init[0])
+        let mut init_output = Command::new(&config.init[0])
             .args(&config.init[1..])
-            .status()
+            .output()
             .context(anyhow!(
                 "Couldn't init. We tried running the command {:?}",
                 &config.init
             ))?;
 
-        if !exit_status.success() {
+        if !init_output.stderr.is_empty() {
+            log::warn!(
+                target: "init command stderr",
+                "{}",
+                String::from_utf8(std::mem::take(&mut init_output.stderr))?
+            );
+        }
+
+        if !init_output.status.success() {
             return Err(anyhow!(
                 "Running init command failed. Command was {:?}",
                 config.init
@@ -272,21 +289,24 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
                     ))?
             };
 
-            let mut typst_stderr = child.stderr.take().unwrap();
-            let typst_stderr_msg_handle = std::thread::spawn(move || {
-                let mut stderr = String::from("Captured stderr from typst was\n");
-                typst_stderr
-                    .read_to_string(&mut stderr)
+            let mut compile_stderr = child
+                .stderr
+                .take()
+                .expect("specified Stdio::piped() for the child");
+            std::thread::spawn(move || {
+                let mut compile_stderr_string = String::new();
+                compile_stderr
+                    .read_to_string(&mut compile_stderr_string)
                     .unwrap_or_else(|_| {
-                        eprintln!("Typst stderr wasn't valid UTF-8.");
+                        log::error!("Typst stderr wasn't valid UTF-8.");
                         0 // dummy number to type check
                     });
-                stderr = stderr.replace("\n", "\n      ");
-                log::trace!("captured stderr from typst call:\n      {}", &stderr);
-                stderr
+
+                if !compile_stderr_string.is_empty() {
+                    log::warn!(target: "typst compile stderr", "{compile_stderr_string}");
+                }
             });
 
-            let mut pproc_stderr_msg_handle: Option<JoinHandle<String>> = None;
             if config.post_processing_typ.len() > 0 {
                 child = Command::new(&config.post_processing_typ[0])
                     .args(&config.post_processing_typ[1..])
@@ -299,22 +319,23 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
                         &config.post_processing_typ
                     ))?;
 
-                let mut pproc_stderr = child.stderr.take().unwrap();
-                pproc_stderr_msg_handle = Some(std::thread::spawn(move || {
-                    let mut stderr = String::from("Captured stderr from post_processing was \n");
+                let mut pproc_stderr = child
+                    .stderr
+                    .take()
+                    .expect("specified Stdio::piped() for the child");
+                std::thread::spawn(move || {
+                    let mut pproc_stderr_string = String::new();
                     pproc_stderr
-                        .read_to_string(&mut stderr)
+                        .read_to_string(&mut pproc_stderr_string)
                         .unwrap_or_else(|_| {
-                            eprintln!("post_processing stderr wasn't valid UTF-8.");
-                            0 // dummy number to type check
+                            log::error!(target: "post-processing stderr", "post_processing stderr wasn't valid UTF-8.");
+                            0
                         });
-                    stderr = stderr.replace("\n", "\n      ");
-                    log::trace!(
-                        "captured stderr from post_processing call:\n      {}",
-                        &stderr
-                    );
-                    stderr
-                }));
+
+                    if !pproc_stderr_string.is_empty() {
+                        log::warn!(target: "post-processing stderr", "{pproc_stderr_string}");
+                    }
+                });
             }
 
             log::trace!("compile_single:t14");
@@ -326,16 +347,7 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
             log::trace!("compile_single:t15");
 
             if !output.status.success() {
-                let pproc_stderr_msg = match pproc_stderr_msg_handle {
-                    Some(handle) => handle.join().unwrap(),
-                    None => String::from("post_processing was not run"),
-                };
-                return Err(anyhow!(
-                    "Compiling {} failed.\n{}\n{}",
-                    path.to_string_lossy(),
-                    typst_stderr_msg_handle.join().unwrap(),
-                    pproc_stderr_msg
-                ));
+                return Err(anyhow!("Compiling {} failed.", path.to_string_lossy()));
             }
 
             log::trace!("compile_single:t16");

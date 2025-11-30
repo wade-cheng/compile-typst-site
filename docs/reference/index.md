@@ -92,3 +92,5 @@ Flags:
 Options:
   -p --path STRING  Use the specified path as the project root.
 ```
+
+When serve or watch mode is on, errors are demoted to warnings to prevent, for example, temporary compilation errors from crashing the mode.
