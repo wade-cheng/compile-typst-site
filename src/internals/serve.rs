@@ -154,6 +154,9 @@ fn handle_connection(
         // Everything worked. Respond to client.
         let mut buf_writer = BufWriter::new(stream);
         buf_writer.write_all(b"HTTP/1.1 200 OK\r\n")?;
+        buf_writer.write_all(b"Content-Length: ")?;
+        buf_writer.write_all(content.len().to_string().as_bytes())?;
+        buf_writer.write_all(b"\r\n")?;
         buf_writer.write_all(b"Content-Type: ")?;
         buf_writer.write_all(mime_type.as_bytes())?;
         buf_writer.write_all(b"\r\n")?;
