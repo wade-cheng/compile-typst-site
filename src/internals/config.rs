@@ -81,6 +81,9 @@ struct ConfigFile {
     ///
     /// Example in the TOML config file: `compilation_extra_args = ["--ignore-system-fonts"]`
     compilation_extra_args: Vec<String>,
+    /// Disable incremental compilation while using serve or watch mode.
+    ///
+    /// Example in the TOML config file: `disable_incremental = true`
     disable_incremental: bool,
 }
 
