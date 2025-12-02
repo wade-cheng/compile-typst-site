@@ -1,10 +1,10 @@
 //! Compile Typst to HTML given paths and a [`crate::config::Config`].
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context as _, Result, anyhow};
 use json::JsonValue;
 use std::ffi::OsStr;
 use std::fs;
-use std::io::Read;
+use std::io::Read as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::mpsc::{self};

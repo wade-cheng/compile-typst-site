@@ -1,6 +1,6 @@
 //! `compile-typst-site` project configuration, pulling from command-line arguments and a config file.
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context as _, Result, anyhow};
 use glob::{MatchOptions, Pattern};
 use nanoserde::{Toml, TomlParser};
 use onlyargs_derive::OnlyArgs;

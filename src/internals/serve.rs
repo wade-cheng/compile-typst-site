@@ -2,7 +2,7 @@
 
 use std::{
     fs,
-    io::{BufRead, BufReader, BufWriter, ErrorKind, Write},
+    io::{BufRead as _, BufReader, BufWriter, ErrorKind, Write as _},
     net::{SocketAddr, TcpListener, TcpStream},
     path::PathBuf,
     sync::{Arc, Mutex, mpsc::Receiver},
