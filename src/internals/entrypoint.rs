@@ -78,7 +78,7 @@ pub fn run(config: &Config) -> Result<()> {
                     continue;
                 }
 
-                if file_created {
+                if file_created || config.disable_incremental {
                     compile::compile_from_scratch(&config)
                         .unwrap_or_else(|e| log::warn!("{:?}", e));
                     if let Some(reload_tx) = &reload_tx {

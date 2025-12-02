@@ -81,6 +81,7 @@ struct ConfigFile {
     ///
     /// Example in the TOML config file: `compilation_extra_args = ["--ignore-system-fonts"]`
     compilation_extra_args: Vec<String>,
+    disable_incremental: bool,
 }
 
 #[derive(Debug)]
@@ -152,6 +153,7 @@ impl Debug for PassthroughCopyGlobs {
 pub struct Config {
     pub watch: bool,
     pub serve: bool,
+    pub disable_incremental: bool,
     pub ignore_initial: bool,
     pub verbose: bool,
     pub trace: bool,
@@ -221,6 +223,7 @@ impl Config {
             file_listing,
             file_listing_extra_args,
             compilation_extra_args,
+            disable_incremental,
         } = Self::get_configfile(&project_root)?;
 
         let (passthrough_copy_globs, passthrough_copy_globs_string_form) =
@@ -241,6 +244,7 @@ impl Config {
             file_listing,
             file_listing_extra_args,
             compilation_extra_args,
+            disable_incremental,
             project_root,
             content_relpath,
             output_relpath,
@@ -352,6 +356,19 @@ impl Config {
         }
         load_strs_field!(file_listing_extra_args);
         load_strs_field!(compilation_extra_args);
+        if let Some(disable_incremental) = given.get_mut("disable_incremental") {
+            match disable_incremental {
+                Toml::Bool(disable_incremental) => {
+                    config.disable_incremental = *disable_incremental
+                }
+                _ => {
+                    return Err(anyhow!(
+                        "toml value was not a bool: {:?}",
+                        disable_incremental
+                    ));
+                }
+            }
+        }
 
         for arg in [] // appease rustfmt
             .iter_mut()
