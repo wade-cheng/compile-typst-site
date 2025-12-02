@@ -29,6 +29,9 @@ struct Args {
 
 #[derive(Default)]
 struct ConfigFile {
+    content_relpath: PathBuf,  // = PathBuf::from("src");
+    output_relpath: PathBuf,   // = PathBuf::from("_site");
+    template_relpath: PathBuf, // = PathBuf::from("templates");
     /// Array of globs to match for passthrough-copying.
     ///
     /// Example in the TOML config file: `passthrough_copy = ["*.css", "*.js", "assets/*"]
@@ -194,10 +197,6 @@ impl Config {
     }
 
     fn new_inner() -> Result<Self> {
-        let content_relpath = PathBuf::from("src");
-        let output_relpath = PathBuf::from("_site");
-        let template_relpath = PathBuf::from("templates");
-
         let Args {
             path,
             watch,
@@ -214,6 +213,9 @@ impl Config {
         };
 
         let ConfigFile {
+            content_relpath,
+            output_relpath,
+            template_relpath,
             passthrough_copy,
             init,
             post_processing_typ,
@@ -324,6 +326,9 @@ impl Config {
         let mut given = TomlParser::parse(&contents)?;
 
         let mut config = ConfigFile::default();
+        config.content_relpath = PathBuf::from("src");
+        config.output_relpath = PathBuf::from("_site");
+        config.template_relpath = PathBuf::from("templates");
 
         macro_rules! load_strs_field {
             ($name:ident) => {
@@ -333,6 +338,41 @@ impl Config {
             };
         }
 
+        // TODO: this sucks. write more macros.
+        if let Some(content_relpath) = given.get_mut("content_relpath") {
+            match content_relpath {
+                Toml::Str(content_relpath) => {
+                    config.content_relpath = std::mem::take(content_relpath).parse()?
+                }
+                _ => {
+                    return Err(anyhow!(
+                        "toml value was not a string: {:?}",
+                        content_relpath
+                    ));
+                }
+            }
+        }
+        if let Some(output_relpath) = given.get_mut("output_relpath") {
+            match output_relpath {
+                Toml::Str(output_relpath) => {
+                    config.output_relpath = std::mem::take(output_relpath).parse()?
+                }
+                _ => return Err(anyhow!("toml value was not a string: {:?}", output_relpath)),
+            }
+        }
+        if let Some(template_relpath) = given.get_mut("template_relpath") {
+            match template_relpath {
+                Toml::Str(template_relpath) => {
+                    config.template_relpath = std::mem::take(template_relpath).parse()?
+                }
+                _ => {
+                    return Err(anyhow!(
+                        "toml value was not a string: {:?}",
+                        template_relpath
+                    ));
+                }
+            }
+        }
         load_strs_field!(passthrough_copy);
         load_strs_field!(init);
         load_strs_field!(post_processing_typ);
