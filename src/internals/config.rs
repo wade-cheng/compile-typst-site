@@ -161,7 +161,6 @@ pub struct Config {
     pub verbose: bool,
     pub trace: bool,
     pub passthrough_copy: Vec<String>,
-    // #[derivative(Debug = "ignore")]
     pub passthrough_copy_globs: PassthroughCopyGlobs,
     // Pattern has gnarly debug impl; emit a String version instead.
     pub passthrough_copy_globs_string_form: Vec<String>,
