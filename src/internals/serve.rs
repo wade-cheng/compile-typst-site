@@ -1,4 +1,16 @@
-// Code is adapted from MIT-licensed https://github.com/leotaku/tower-livereload/tree/master/examples/livehttpd.
+//! A simple web server that injects live-reloading capability.
+//!
+//! Features:
+//!
+//! - Only serves GET requests.
+//!
+//! - Able to emit an error 404.
+//!
+//! - Decides when to live-reload by deferring to the user. That is, it
+//!   triggers hot reloading when a `Receiver` gets a message.
+//!
+//! - Focuses on short code over exhaustive spec compliance, but is intended
+//!   to be enough for the target audience of `compile-typst-site`.
 
 use std::{
     fs,
@@ -10,8 +22,9 @@ use std::{
 };
 
 use anyhow::{Result, anyhow};
+use bstr::ByteSlice as _;
 
-const LIVE_RELOAD_SCRIPT: &str = r#"<script>
+const LIVE_RELOAD_SCRIPT: &'static [u8; 285] = br"<script>
     const source = new EventSource('/livereload');
     source.onmessage = () => {
         source.close(); 
@@ -23,7 +36,7 @@ const LIVE_RELOAD_SCRIPT: &str = r#"<script>
     window.onbeforeunload = () => {
         source.close();
     };
-</script>"#;
+</script>";
 
 fn guess_mime_type(path: &PathBuf) -> &'static str {
     match path.extension().and_then(|e| e.to_str()) {
@@ -44,24 +57,23 @@ fn guess_mime_type(path: &PathBuf) -> &'static str {
     }
 }
 
-fn inject_livereload_script(html: &str) -> String {
-    // Try to inject before </body>, otherwise before </html>, otherwise at the end
-    if let Some(pos) = html.rfind("</body>") {
-        format!(
-            "{}{}</body>{}",
-            &html[..pos],
-            LIVE_RELOAD_SCRIPT,
-            &html[pos + 7..]
-        )
-    } else if let Some(pos) = html.rfind("</html>") {
-        format!(
-            "{}{}</html>{}",
-            &html[..pos],
-            LIVE_RELOAD_SCRIPT,
-            &html[pos + 7..]
-        )
-    } else {
-        format!("{}{}", html, LIVE_RELOAD_SCRIPT)
+/// Try to inject [`LIVE_RELOAD_SCRIPT`] before `</body>`, otherwise before `</html>`, otherwise at the end.
+fn inject_livereload_script(html: &mut Vec<u8>) {
+    /// Try to inject [`LIVE_RELOAD_SCRIPT`] before some needle, returning whether that needle existed.
+    fn inject_before(html: &mut Vec<u8>, needle: &[u8]) -> bool {
+        if let Some(pos) = html.rfind(needle) {
+            let footer = html[pos..].to_owned();
+            html.truncate(pos);
+            html.extend(LIVE_RELOAD_SCRIPT);
+            html.extend(footer);
+            true
+        } else {
+            false
+        }
+    }
+
+    if !inject_before(html, b"</body>") && !inject_before(html, b"</html>") {
+        html.extend(LIVE_RELOAD_SCRIPT);
     }
 }
 
@@ -94,8 +106,10 @@ fn handle_connection(
     output_path: &PathBuf,
     hot_reload_clients: Arc<Mutex<Vec<TcpStream>>>,
 ) -> Result<()> {
-    let buf_reader = BufReader::new(&stream);
-    let request_line = buf_reader.lines().next().unwrap_or(Ok("".into()))?;
+    let request_line = BufReader::new(&stream)
+        .lines()
+        .next()
+        .unwrap_or(Ok(String::new()))?;
 
     // only respond to these specific stuff. keep it lean.
     if let Some(url_path_and_version) = request_line.strip_prefix("GET ")
@@ -121,30 +135,23 @@ fn handle_connection(
             }
         }
 
-        let file = fs::read(&file_path);
-        let content = match file {
-            Ok(content) => Ok(content),
-            Err(e) => {
-                if e.kind() == ErrorKind::NotFound {
-                    write_404_response(stream)?;
-                    return Ok(());
-                } else {
-                    Err(e)
-                }
+        let mut content = match fs::read(&file_path) {
+            Ok(content) => content,
+            Err(e) if e.kind() == ErrorKind::NotFound => {
+                write_404_response(stream)?;
+                return Ok(());
             }
-        }?;
+            Err(e) => return Err(e.into()),
+        };
 
         let mime_type = guess_mime_type(&file_path);
 
         // Inject live reload script into HTML files
-        let response_body = if mime_type.starts_with("text/html") {
-            let html = String::from_utf8_lossy(&content);
-            let injected = inject_livereload_script(&html);
-            injected.into_bytes()
-        } else {
-            content
-        };
+        if mime_type.starts_with("text/html") {
+            inject_livereload_script(&mut content);
+        }
 
+        // Everything worked. Respond to client.
         let mut buf_writer = BufWriter::new(stream);
         buf_writer.write_all(b"HTTP/1.1 200 OK\r\n")?;
         buf_writer.write_all(b"Content-Type: ")?;
@@ -154,11 +161,12 @@ fn handle_connection(
         buf_writer.write_all(b"Pragma: no-cache\r\n")?;
         buf_writer.write_all(b"Expires: 0\r\n")?;
         buf_writer.write_all(b"\r\n")?;
-        buf_writer.write_all(&response_body)?;
+        buf_writer.write_all(&content)?;
         buf_writer.flush()?;
     } else {
         write_404_response(stream)?;
     }
+
     Ok(())
 }
 
@@ -196,6 +204,11 @@ fn bind() -> Result<TcpListener> {
     Ok(listener)
 }
 
+/// Serves a simple web server that injects live-reloading capability.
+///
+/// Triggers hot reloading when the `Receiver` gets a message.
+///
+/// Blocks indefinitely.
 pub fn serve(reload_rx: Receiver<()>, path: PathBuf) -> Result<()> {
     let hot_reload_clients: Arc<Mutex<Vec<TcpStream>>> = Arc::new(Mutex::new(vec![]));
 
@@ -220,5 +233,5 @@ pub fn serve(reload_rx: Receiver<()>, path: PathBuf) -> Result<()> {
         }
     });
 
-    Ok(())
+    unreachable!()
 }

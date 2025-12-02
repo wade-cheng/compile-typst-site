@@ -12,6 +12,7 @@ exclude = [
 
 [dependencies]
 anyhow = "1.0.100"
+bstr = "1.12.1"
 glob = "0.3.3"
 json = "0.12.4"
 log = "0.4.28"
