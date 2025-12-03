@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Emit a `Content-Length` header when serving HTTP.
+
+### Added
+
+- Docs.
+- Logging durations of actions.
+- Uppercase extensions have their mime types guessed instead of assuming binary.
+- Logging looks more consistent (more things using `log` framework).
+- `color` flag to CLI args.
+
+### Changed
+
+- Default output coloring now depends on whether the output is to a terminal, instead of always.
+
 ## [2.1.0-rc3] - 2025-12-02
 
 ### Added
