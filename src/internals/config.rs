@@ -6,8 +6,58 @@ use nanoserde::{Toml, TomlParser};
 use onlyargs_derive::OnlyArgs;
 use std::fmt::Debug;
 use std::fs;
+use std::io::IsTerminal as _;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use std::sync::OnceLock;
+
+#[derive(Debug)]
+pub enum LogWithColor {
+    Auto,
+    Always,
+    Never,
+}
+
+static IS_TERMINAL: OnceLock<bool> = OnceLock::new();
+
+impl LogWithColor {
+    pub fn use_color(&self) -> bool {
+        match self {
+            LogWithColor::Auto => *IS_TERMINAL.get_or_init(|| std::io::stdout().is_terminal()),
+            LogWithColor::Always => true,
+            LogWithColor::Never => false,
+        }
+    }
+
+    pub fn str(&self) -> &'static str {
+        match self {
+            LogWithColor::Auto => "auto",
+            LogWithColor::Always => "always",
+            LogWithColor::Never => "never",
+        }
+    }
+}
+
+impl FromStr for LogWithColor {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        match s {
+            "auto" => Ok(Self::Auto),
+            "always" => Ok(Self::Always),
+            "never" => Ok(Self::Never),
+            _ => Err(anyhow!(
+                "color argument must be one of \"auto\", \"always\", or \"never\""
+            )),
+        }
+    }
+}
+
+impl Default for LogWithColor {
+    fn default() -> Self {
+        Self::Auto
+    }
+}
 
 // Don't need a Args rustdoc here because our current crate scrapes from the Cargo.toml description I guess??
 #[derive(Clone, Debug, Eq, PartialEq, OnlyArgs)]
@@ -24,6 +74,8 @@ struct Args {
     verbose: bool,
     /// Enable very verbose logging.
     trace: bool,
+    /// Whether to use color. [default: auto] [possible values: auto, always, never]
+    color: Option<String>,
 }
 
 #[derive(Default)]
@@ -159,6 +211,7 @@ pub struct Config {
     pub ignore_initial: bool,
     pub verbose: bool,
     pub trace: bool,
+    pub color: LogWithColor,
     pub passthrough_copy: Vec<String>,
     pub passthrough_copy_globs: PassthroughCopyGlobs,
     // Pattern has gnarly debug impl; emit a String version instead.
@@ -201,7 +254,13 @@ impl Config {
             ignore_initial,
             verbose,
             trace,
+            color,
         } = onlyargs::parse()?;
+
+        let color = match color {
+            Some(c) => c.parse()?,
+            None => LogWithColor::default(),
+        };
 
         // map with Ok, or else search for the root, then ?
         let project_root = path.map_or_else(Self::get_project_root, Ok)?;
@@ -226,6 +285,7 @@ impl Config {
             ignore_initial,
             verbose,
             trace,
+            color,
             passthrough_copy,
             passthrough_copy_globs,
             passthrough_copy_globs_string_form,
