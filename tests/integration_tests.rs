@@ -1,5 +1,5 @@
 mod util;
-use std::{env, fs, io, path::PathBuf};
+use std::{env, fs, io, path::PathBuf, time::Duration};
 
 use compile_typst_site::internals::config::CONFIG_FNAME;
 use walkdir::WalkDir;
@@ -171,7 +171,10 @@ fn wade_mirror_succeeds() {
 #[test]
 #[ignore = "100MB of stress test"]
 fn can_read_and_post_process_lengthy_content() {
-    let (_, output) = IntegrationTest::new("read_lengthy_content").run().unwrap();
+    let (_, output) = IntegrationTest::new("read_lengthy_content")
+        .timeout(Duration::from_secs(15))
+        .run()
+        .unwrap();
 
     println!("stdout: {}", String::from_utf8(output.stdout).unwrap());
     println!("stderr: {}", String::from_utf8(output.stderr).unwrap());
