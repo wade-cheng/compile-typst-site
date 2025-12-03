@@ -11,14 +11,11 @@ use std::{sync::mpsc, time::Duration};
 
 use crate::internals::compile::{self, CompileOutput};
 use crate::internals::config::Config;
-use crate::internals::logging;
 
 /// Run compile-typst-site.
 ///
 /// When serving or watching, we do our best to not exit by logging errors or warnings when we might otherwise return an Error.
 pub fn run(config: &Config) -> Result<()> {
-    logging::init(&config);
-
     match Command::new("typst").arg("--version").output() {
         Ok(typst_version) => {
             log::info!(
