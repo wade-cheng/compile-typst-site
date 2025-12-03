@@ -7,7 +7,6 @@ use onlyargs_derive::OnlyArgs;
 use std::fmt::Debug;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::exit;
 use std::str::FromStr;
 
 // Don't need a Args rustdoc here because our current crate scrapes from the Cargo.toml description I guess??
@@ -178,13 +177,6 @@ pub struct Config {
 pub const CONFIG_FNAME: &str = "compile-typst-site.toml";
 
 impl Config {
-    pub fn new() -> Self {
-        Self::new_inner().unwrap_or_else(|err| {
-            eprintln!("{:?}", err);
-            exit(1)
-        })
-    }
-
     pub fn content_root(&self) -> PathBuf {
         self.project_root.join(&self.content_relpath)
     }
@@ -197,7 +189,7 @@ impl Config {
         self.project_root.join(&self.template_relpath)
     }
 
-    fn new_inner() -> Result<Self> {
+    pub fn new() -> Result<Self> {
         let content_relpath = PathBuf::from("src");
         let output_relpath = PathBuf::from("_site");
         let template_relpath = PathBuf::from("templates");
