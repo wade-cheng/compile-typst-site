@@ -3,7 +3,7 @@
 use log::LevelFilter;
 use simple_logger::SimpleLogger;
 
-use crate::internals::config::Config;
+use crate::internals::config::{Config, LogWithColor};
 
 const DEFAULT_LEVEL: LevelFilter = LevelFilter::Info;
 
@@ -23,6 +23,7 @@ pub fn init(config: &Config) {
 
     SimpleLogger::new()
         .with_level(log_level_filter)
+        .with_colors(config.color.use_color())
         .init()
         .unwrap();
 }
@@ -33,6 +34,7 @@ pub fn init(config: &Config) {
 pub fn init_default() {
     SimpleLogger::new()
         .with_level(DEFAULT_LEVEL)
+        .with_colors(LogWithColor::default().use_color())
         .init()
         .unwrap();
 }
