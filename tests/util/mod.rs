@@ -59,7 +59,13 @@ impl IntegrationTest {
                     .args(&self.args)
                     .output()
                     .expect("args are all developer-hardcoded, should be correct");
-                tx.send(output).unwrap();
+                tx.send(output).unwrap_or_else(|e| {
+                    println!(
+                        "Could not send, corresponding receiver was dropped \
+                        Maybe the timeout passed? \
+                        Error was {e:?}"
+                    );
+                });
             });
 
             use std::io::ErrorKind as E;
