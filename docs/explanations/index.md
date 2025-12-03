@@ -6,4 +6,5 @@ understanding why things are done.
 ```{toctree}
 why_us
 literal_paths
+ignoring_local_fonts
 ```
