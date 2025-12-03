@@ -41,19 +41,19 @@ const LIVE_RELOAD_SCRIPT: &[u8; 348] = br"<script>
 
 fn guess_mime_type(path: &PathBuf) -> &'static str {
     match path.extension().and_then(|e| e.to_str()) {
-        Some("html") => "text/html; charset=utf-8",
-        Some("css") => "text/css; charset=utf-8",
-        Some("js") => "application/javascript; charset=utf-8",
-        Some("json") => "application/json",
-        Some("png") => "image/png",
-        Some("jpg") | Some("jpeg") => "image/jpeg",
-        Some("gif") => "image/gif",
-        Some("svg") => "image/svg+xml",
-        Some("ico") => "image/x-icon",
-        Some("woff") => "font/woff",
-        Some("woff2") => "font/woff2",
-        Some("ttf") => "font/ttf",
-        Some("pdf") => "application/pdf",
+        Some(ext) if ext.eq_ignore_ascii_case("html") => "text/html; charset=utf-8",
+        Some(ext) if ext.eq_ignore_ascii_case("css") => "text/css; charset=utf-8",
+        Some(ext) if ext.eq_ignore_ascii_case("js") => "application/javascript; charset=utf-8",
+        Some(ext) if ext.eq_ignore_ascii_case("json") => "application/json",
+        Some(ext) if ext.eq_ignore_ascii_case("png") => "image/png",
+        Some(ext) if ext.eq_ignore_ascii_case("jpg") || ext.eq_ignore_ascii_case("jpeg") => "image/jpeg",
+        Some(ext) if ext.eq_ignore_ascii_case("gif") => "image/gif",
+        Some(ext) if ext.eq_ignore_ascii_case("svg") => "image/svg+xml",
+        Some(ext) if ext.eq_ignore_ascii_case("ico") => "image/x-icon",
+        Some(ext) if ext.eq_ignore_ascii_case("woff") => "font/woff",
+        Some(ext) if ext.eq_ignore_ascii_case("woff2") => "font/woff2",
+        Some(ext) if ext.eq_ignore_ascii_case("ttf") => "font/ttf",
+        Some(ext) if ext.eq_ignore_ascii_case("pdf") => "application/pdf",
         _ => "application/octet-stream",
     }
 }
