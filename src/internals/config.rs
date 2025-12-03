@@ -13,7 +13,7 @@ use std::str::FromStr;
 #[derive(Clone, Debug, Eq, PartialEq, OnlyArgs)]
 struct Args {
     /// Use the specified path as the project root.
-    path: Option<String>,
+    path: Option<PathBuf>,
     /// Build and then watch for changes.
     watch: bool,
     /// Build and then watch for changes while serving website locally.
@@ -203,11 +203,8 @@ impl Config {
             trace,
         } = onlyargs::parse()?;
 
-        let project_root = if let Some(path) = path {
-            path.parse()?
-        } else {
-            Self::get_project_root()?
-        };
+        // map with Ok, or else search for the root, then ?
+        let project_root = path.map_or_else(Self::get_project_root, Ok)?;
 
         let ConfigFile {
             passthrough_copy,
