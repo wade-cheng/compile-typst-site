@@ -1,6 +1,6 @@
 //! The function to call to kick off the binary.
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use notify_debouncer_full;
 use notify_debouncer_full::DebounceEventResult;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};
@@ -13,14 +13,28 @@ use crate::internals::compile::{self, CompileOutput};
 use crate::internals::config::Config;
 use crate::internals::logging;
 
+/// Run compile-typst-site.
+///
+/// When serving or watching, we do our best to not exit by logging errors or warnings when we might otherwise return an Error.
 pub fn run(config: &Config) -> Result<()> {
     logging::init(&config);
 
-    if Command::new("typst").status().is_err() {
-        return Err(anyhow!(
-            "Typst doesn't seem to be installed on your computer. \
-            See https://typst.app/open-source/#download"
-        ));
+    match Command::new("typst").arg("--version").output() {
+        Ok(typst_version) => {
+            log::info!(
+                "Using system typst with version: {}",
+                String::from_utf8(typst_version.stdout).context(
+                    "`typst --version` wrote to stdout \
+                    with bytes that could not be interpreted as UTF-8."
+                )?
+            )
+        }
+        Err(_) => {
+            return Err(anyhow!(
+                "Typst doesn't seem to be installed on your computer. \
+                See https://typst.app/open-source/#download"
+            ));
+        }
     }
 
     log::debug!("loaded configuration: {:#?}", &config);
@@ -61,52 +75,53 @@ pub fn run(config: &Config) -> Result<()> {
         });
 
         for event in events {
-            if let EventKind::Create(_) | EventKind::Modify(_) = event.kind {
-                let file_created = matches!(event.kind, EventKind::Create(_));
+            if !matches!(event.kind, EventKind::Create(_) | EventKind::Modify(_)) {
+                continue;
+            }
 
-                let relevant_paths: Vec<PathBuf> = event
-                    .event
-                    .paths
-                    .into_iter()
-                    .filter(|path| {
-                        path.strip_prefix(config.content_root()).is_ok()
-                            || path.strip_prefix(config.template_root()).is_ok()
-                    })
-                    .collect();
+            let file_created = matches!(event.kind, EventKind::Create(_));
 
-                if relevant_paths.is_empty() {
-                    continue;
+            let relevant_paths: Vec<PathBuf> = event
+                .event
+                .paths
+                .into_iter()
+                .filter(|path| {
+                    path.strip_prefix(config.content_root()).is_ok()
+                        || path.strip_prefix(config.template_root()).is_ok()
+                })
+                .collect();
+
+            if relevant_paths.is_empty() {
+                continue;
+            }
+
+            if file_created || config.disable_incremental {
+                compile::compile_from_scratch(&config).unwrap_or_else(|e| log::warn!("{:?}", e));
+                if let Some(reload_tx) = &reload_tx {
+                    reload_tx.send(())?;
                 }
+            } else {
+                compile::compile_batch(relevant_paths.clone().into_iter(), &config)
+                    .unwrap_or_else(|e| log::warn!("{:?}", e));
 
-                if file_created || config.disable_incremental {
-                    compile::compile_from_scratch(&config)
-                        .unwrap_or_else(|e| log::warn!("{:?}", e));
-                    if let Some(reload_tx) = &reload_tx {
-                        reload_tx.send(())?;
-                    }
-                } else {
-                    compile::compile_batch(relevant_paths.clone().into_iter(), &config)
-                        .unwrap_or_else(|e| log::warn!("{:?}", e));
-
-                    if let Some(reload_tx) = &reload_tx {
-                        for path in &relevant_paths {
-                            match CompileOutput::from_full_path(path, config)? {
-                                CompileOutput::Noop => (),
-                                _ => reload_tx
-                                    .send(())
-                                    .unwrap_or_else(|e| log::error!("{:?}", e)),
-                            }
+                if let Some(reload_tx) = &reload_tx {
+                    for path in &relevant_paths {
+                        match CompileOutput::from_full_path(path, config)? {
+                            CompileOutput::Noop => (),
+                            _ => reload_tx
+                                .send(())
+                                .unwrap_or_else(|e| log::error!("{:?}", e)),
                         }
                     }
                 }
+            }
 
-                // it might as well be an invariant that there is one event.event.paths
-                // since we watch for Create and Modify. oh well.
-                if relevant_paths.len() == 1 {
-                    log::info!("recompiled path: {:?}", relevant_paths[0]);
-                } else {
-                    log::info!("recompiled paths: {:?}", relevant_paths);
-                }
+            // it might as well be an invariant that there is one event.event.paths
+            // since we watch for Create and Modify. oh well.
+            if relevant_paths.len() == 1 {
+                log::info!("recompiled path: {:?}", relevant_paths[0]);
+            } else {
+                log::info!("recompiled paths: {:?}", relevant_paths);
             }
         }
     }

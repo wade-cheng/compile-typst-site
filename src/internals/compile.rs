@@ -13,7 +13,7 @@ use walkdir::WalkDir;
 
 use crate::internals::config::{Config, FileListing};
 
-/// Return paths to the files in source we will process.
+/// Return absolute paths to the files in source we will process.
 ///
 /// This includes data files we ignore, stuff we pass through, typ files, everything.
 /// i.e. we walk through the source dir.
@@ -96,7 +96,7 @@ impl CompileOutput {
 /// - the key is the full path to the original file (that is, in src, not in _site)
 /// - the value is an array
 ///   - empty if not IncludeData
-///   - otherwise, returned from querying the file for the <data> tag of the Typst file
+///   - otherwise, returned from querying the file for the `<data>` tag of the Typst file
 pub fn files_as_json(config: &Config) -> Result<String> {
     let mut json = JsonValue::new_object();
 
@@ -217,7 +217,7 @@ pub fn compile_from_scratch(config: &Config) -> Result<()> {
     }
 
     log::info!("starting compilation");
-    compile_batch(source_files(&config), &config)?; // todo in here
+    compile_batch(source_files(&config), &config)?;
 
     log::info!(
         "compiled project from scratch in {}s",

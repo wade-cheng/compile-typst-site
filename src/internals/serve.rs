@@ -24,7 +24,7 @@ use std::{
 use anyhow::{Result, anyhow};
 use bstr::ByteSlice as _;
 
-const LIVE_RELOAD_SCRIPT: &'static [u8; 285] = br"<script>
+const LIVE_RELOAD_SCRIPT: &[u8; 348] = br"<script>
     const source = new EventSource('/livereload');
     source.onmessage = () => {
         source.close(); 
@@ -36,6 +36,7 @@ const LIVE_RELOAD_SCRIPT: &'static [u8; 285] = br"<script>
     window.onbeforeunload = () => {
         source.close();
     };
+    // closing must be done, lest browser complain with errors
 </script>";
 
 fn guess_mime_type(path: &PathBuf) -> &'static str {
@@ -173,6 +174,7 @@ fn handle_connection(
     Ok(())
 }
 
+/// Search for and bind to the first available port in a hardcoded range.
 fn bind() -> Result<TcpListener> {
     let mut listener: Option<TcpListener> = None;
     let mut addr: Option<SocketAddr> = None;
