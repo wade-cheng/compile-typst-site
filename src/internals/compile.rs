@@ -8,6 +8,7 @@ use std::io::Read as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::mpsc::{self};
+use std::time::Instant;
 use walkdir::WalkDir;
 
 use crate::internals::config::{Config, FileListing};
@@ -175,6 +176,8 @@ pub fn files_as_json(config: &Config) -> Result<String> {
 }
 
 pub fn compile_from_scratch(config: &Config) -> Result<()> {
+    let start = Instant::now();
+
     if config.init.len() > 0 {
         log::info!("running init command");
         let mut init_output = Command::new(&config.init[0])
@@ -216,7 +219,10 @@ pub fn compile_from_scratch(config: &Config) -> Result<()> {
     log::info!("starting compilation");
     compile_batch(source_files(&config), &config)?; // todo in here
 
-    log::info!("compiled project from scratch");
+    log::info!(
+        "compiled project from scratch in {}s",
+        Instant::now().duration_since(start).as_millis() as f32 / 1000.0
+    );
 
     Ok(())
 }
@@ -373,6 +379,8 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
 /// Each path is compiled under a separate thread. Paths can be anywhere under src or templates.
 /// Calling this function on paths outside those folders mayyy cause errors.
 pub fn compile_batch(paths: impl Iterator<Item = PathBuf>, config: &Config) -> Result<()> {
+    let start = Instant::now();
+
     std::thread::scope(|s| -> Result<()> {
         let mut paths_and_handles = vec![];
         for path in paths {
@@ -389,6 +397,11 @@ pub fn compile_batch(paths: impl Iterator<Item = PathBuf>, config: &Config) -> R
 
         Ok(())
     })?;
+
+    log::info!(
+        "compiled batch of files in {}s",
+        Instant::now().duration_since(start).as_millis() as f32 / 1000.0
+    );
 
     Ok(())
 }
