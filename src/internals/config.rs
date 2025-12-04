@@ -36,6 +36,10 @@ impl LogWithColor {
             LogWithColor::Never => "never",
         }
     }
+
+    pub fn str_collapsing_auto(&self) -> &'static str {
+        if self.use_color() { "always" } else { "never" }
+    }
 }
 
 impl FromStr for LogWithColor {

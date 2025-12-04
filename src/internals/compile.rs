@@ -119,7 +119,7 @@ pub fn files_as_json(config: &Config) -> Result<String> {
                 ) {
                     let args = [
                         OsStr::new("--color"),
-                        OsStr::new(config.color.str()),
+                        OsStr::new(config.color.str_collapsing_auto()),
                         OsStr::new("query"),
                         OsStr::new(&file),
                         OsStr::new("<data>"),
@@ -261,7 +261,7 @@ pub fn compile_single(path: &Path, config: &Config) -> Result<()> {
             let mut child = {
                 let args = [
                     OsStr::new("--color"),
-                    OsStr::new(config.color.str()),
+                    OsStr::new(config.color.str_collapsing_auto()),
                     OsStr::new("c"),
                     OsStr::new(&path),
                     OsStr::new("-"),
