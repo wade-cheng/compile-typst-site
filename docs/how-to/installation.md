@@ -12,16 +12,10 @@ After Typst is installed, use one of the `compile-typst-site` installation metho
 
 See the [releases](https://github.com/wade-cheng/compile-typst-site/releases) to install from a precompiled binary.
 
-Check that Typst and `compile-typst-site` were installed properly by printing their versions. If there are no errors, you're done with installation. It should look something like this:[^1]
+Check that Typst and `compile-typst-site` were installed properly by printing their versions. If there are no errors, you're done with installation. It should look something like this:
 
-[^1]: The version numbers might differ.
-
-```
-$ typst --version
-typst 0.14.0 (dd1e6e94)
-
-$ compile-typst-site --version
-compile-typst-site v0.3.1
+```{literalinclude} versions.txt
+:language: text
 ```
 
 ## From cargo-binstall
