@@ -1,0 +1,19 @@
+compile-typst-site v2.1.0-indevunknown
+Command-line program for static site generation using Typst.
+
+Usage:
+  compile-typst-site [flags] [options]
+
+Flags:
+  -h --help            Show this help message.
+  -V --version         Show the application version.
+  -w --watch           Build and then watch for changes.
+  -s --serve           Build and then watch for changes while serving website locally.
+  -i --ignore-initial  Ignore initial full-site compilation step.
+  -v --verbose         Enable verbose logging.
+  -t --trace           Enable very verbose logging.
+
+Options:
+  -p --path PATH     Use the specified path as the project root.
+  -c --color STRING  Whether to use color. [default: auto] [possible values: auto, always, never]
+
