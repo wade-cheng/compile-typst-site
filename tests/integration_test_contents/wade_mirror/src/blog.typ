@@ -45,6 +45,7 @@ I would've really liked just doing laundry and taxes with you.
     }))
 
 #for (path, queried) in files [
+  #let path = path.replace("\\", "/") // make it windows-friendly
   #if queried.len() > 0 and path.contains("/blog/"){
     let path = (path
       .split("/blog/")
