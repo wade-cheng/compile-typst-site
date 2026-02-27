@@ -379,7 +379,7 @@ impl Config {
         const PROJ_ROOT_REPLACEE: &str = "$PROJECT_ROOT";
 
         let file = project_root.join(CONFIG_FNAME);
-        let contents = fs::read_to_string(file)?;
+        let contents = fs::read_to_string(file)?.replace("\r\n", "\n"); // nanoserde can't handle windows?
         let mut given = TomlParser::parse(&contents)?;
 
         let mut config = ConfigFile::default();
