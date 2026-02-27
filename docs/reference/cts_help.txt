@@ -1,4 +1,4 @@
-compile-typst-site v2.1.0-indevunknown
+compile-typst-site v2.1.0
 Command-line program for static site generation using Typst.
 
 Usage:
