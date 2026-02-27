@@ -10,10 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Emit a `Content-Length` header when serving HTTP.
+- Added workaround for toml parsing bug in nanoserde (https://github.com/not-fl3/nanoserde/issues/154).
 
 ### Added
 
-- Docs.
+- Docs. More error context.
 - Logging durations of actions.
 - Uppercase extensions have their mime types guessed instead of assuming binary.
 - Logging looks more consistent (more things using `log` framework).
