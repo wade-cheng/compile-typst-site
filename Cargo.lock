@@ -42,7 +42,7 @@ dependencies = [
 
 [[package]]
 name = "compile-typst-site"
-version = "2.1.0-rc3"
+version = "2.1.0"
 dependencies = [
  "anyhow",
  "bstr",

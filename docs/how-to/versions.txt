@@ -1,7 +1,7 @@
 
 $ typst --version
-typst 0.14.1 (eb2027e5)
+typst 0.14.2 (b33de9de)
 
 $ compile-typst-site --version
-compile-typst-site v2.1.0-indevunknown
+compile-typst-site v2.1.0
 
